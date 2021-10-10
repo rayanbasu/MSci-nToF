@@ -1,3 +1,8 @@
 Week 0: Made Github repository.
 
 Goal for next week is to write code for the forward problem: understanding what detectors measure when a certain neutron spectrum is emitted over a small burst duration.
+
+%%%%
+Meeting 1:
+Rayan will code up energy distribution of example emitting source
+Ewan will try to code up equation 2 of VLAD paper
