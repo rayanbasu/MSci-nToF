@@ -68,7 +68,7 @@ def lininc(t):
         return grad * t + c #returns temperature in keV
     
     
-#linearly decreasing temperature from 10keV to 0 over burn time = 100ps.
+#linearly decreasing temperature from 10keV to 1keV over burn time = 100ps.
 def lindec(t):
     
     #temperatures constant outside burn
@@ -76,12 +76,12 @@ def lindec(t):
         return 10
     
     elif t > (t_0 + burn_time/2):
-        return 0.0001 #to avoid dividing by zero (?)
+        return 1 #to avoid dividing by zero (?)
     
     #during burn
     else:
-        grad = (0 - 10) / burn_time
-        y_midpoint = 5
+        grad = (1 - 10) / burn_time
+        y_midpoint = 5.5
         c = y_midpoint - grad * t_0
         
         return grad * t + c #returns temperature in keV
@@ -94,7 +94,7 @@ def const_temp(t):
 def S(E, t):
     
     #normalisation constant (still need to calculate this!! use this for now)
-    norm = 1/np.sqrt(2 * np.pi)
+    norm = 0.021249110488318672
     
     #make the temperature profile modifiable in function argument!!
     E_0, E_var = DTprimspecmoments(lininc(t)) #chosen lininc() for now
@@ -150,9 +150,11 @@ surf = ax.plot_surface(E_grid, t_grid, Z, cmap=cm.coolwarm)
 #customise plot
 ax.set_ylabel('time (ps)')
 ax.set_xlabel('energy (Mev)')
-ax.set_zlabel('pdf')
-ax.azim = -50
+#ax.set_zlabel('pdf')
+#ax.set_yticks(np.arange(0,0.125,0.025))
+ax.azim =+80
 fig.colorbar(surf, shrink=0.5, aspect=15)
+plt.title("Linearly Increasing Temperature")
 
 plt.show()
 
@@ -166,7 +168,6 @@ def g(x):
 
 
 lininc_lambda= lambda x:g(x)
-
 
 #Creating a lambda function for lindec
 def h(x):
