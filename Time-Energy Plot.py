@@ -44,37 +44,6 @@ def DTprimspecmoments(Tion):
     
     return mean, variance #note: this is returned in MeV!!!
 
-def sigma(Tion):
-# Mean calculation
-    a1 = 5.30509
-    a2 = 2.4736e-3
-    a3 = 1.84
-    a4 = 1.3818
-      
-    mean_shift = a1*Tion**(0.6666666666)/(1.0+a2*Tion**a3)+a4*Tion
-    
-    # keV to MeV
-    mean_shift /= 1e3
-    
-    mean = 14.021 + mean_shift
-    
-    # Variance calculation
-    omega0 = 177.259
-    a1 = 5.1068e-4
-    a2 = 7.6223e-3
-    a3 = 1.78
-    a4 = 8.7691e-5
-    
-    delta = a1*Tion**(0.6666666666)/(1.0+a2*Tion**a3)+a4*Tion
-    
-    C = omega0*(1+delta)
-    FWHM2 = C**2*Tion
-    variance_1 = FWHM2/(2.35482)**2
-    # keV^2 to MeV^2
-    variance = variance_1 *10**-6
-    
-    return variance #note: this is returned in MeV!!!!
-
 '''
 Define the different temperature profiles centered around bang time:
 (need to figure out what to set temperature outside burn time range)
