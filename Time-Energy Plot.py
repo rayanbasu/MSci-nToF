@@ -1,49 +1,17 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed Oct 20 21:39:09 2021
-
-@author: rayan
+@author: rayan & ewan
 """
 import numpy as np
 import matplotlib.pyplot as plt
-#%%
-n=1000
-
-
-t_0 = 100
-t_std = 10
-
-
-def time(t):
-    #return np.exp(-(((t-t_0)**2)/(2*t_std**2)))/(t_std*np.sqrt(2**np.pi))
-    return(t*2/200**2)
-
-
-
-time_list = np.linspace(0,200,n)
-
-
-
-plt.plot(time_list, time(time_list))
-
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
+from scipy import integrate
+import scipy
 
 #%%
-
-
-e_0 = 14.05
-e_std = 1
-def energy(x, e_0, e_std):
-    return np.exp(-(((x-e_0)**2)/(2*e_std**2)))/(e_std*np.sqrt(2**np.pi))
-
-
-
-energy_list = np.linspace(13,15,n)
-
-
-plt.plot(energy_list, energy(energy_list, e_0, e_std))
-
-#%%
-# Returns the mean and variance based on Ballabio
+# Returns the mean energy and variance based on Ballabio (Code from Aiden)
 # Tion in keV
 def DTprimspecmoments(Tion):
 # Mean calculation
@@ -51,21 +19,13 @@ def DTprimspecmoments(Tion):
     a2 = 2.4736e-3
     a3 = 1.84
     a4 = 1.3818
-    
-    
-    
+      
     mean_shift = a1*Tion**(0.6666666666)/(1.0+a2*Tion**a3)+a4*Tion
-    
-    
     
     # keV to MeV
     mean_shift /= 1e3
     
-    
-    
     mean = 14.021 + mean_shift
-    
-    
     
     # Variance calculation
     omega0 = 177.259
@@ -74,11 +34,7 @@ def DTprimspecmoments(Tion):
     a3 = 1.78
     a4 = 8.7691e-5
     
-    
-    
     delta = a1*Tion**(0.6666666666)/(1.0+a2*Tion**a3)+a4*Tion
-    
-    
     
     C = omega0*(1+delta)
     FWHM2 = C**2*Tion
@@ -86,54 +42,220 @@ def DTprimspecmoments(Tion):
     # keV^2 to MeV^2
     variance /= 1e6
     
-    
-    
-    return mean, variance
-#%%
+    return mean, variance #note: this is returned in MeV!!!
 
-temperature_increase = np.linspace(4,15,n)
-temperature_decrease= np.linspace(10,0,n)
-
-#%%
-#4.3 to 15. 10 to 0
-
-from mpl_toolkits.mplot3d import Axes3D
-
-
-fig = plt.figure()
-ax = plt.axes(projection="3d")
-
-
-X, Y = np.meshgrid(time_list, energy_list)
-Z1 = np.zeros([n,n])
-for i in range(len(X)):
-    
+def sigma(Tion):
+# Mean calculation
+    a1 = 5.30509
+    a2 = 2.4736e-3
+    a3 = 1.84
+    a4 = 1.3818
       
+    mean_shift = a1*Tion**(0.6666666666)/(1.0+a2*Tion**a3)+a4*Tion
     
-    e_0, e_std = DTprimspecmoments(temperature_increase[i])
+    # keV to MeV
+    mean_shift /= 1e3
     
+    mean = 14.021 + mean_shift
     
+    # Variance calculation
+    omega0 = 177.259
+    a1 = 5.1068e-4
+    a2 = 7.6223e-3
+    a3 = 1.78
+    a4 = 8.7691e-5
     
-    for j in range(len(Y)):
-        Z1[i][j] = time(X[i][j]) * energy(Y[i][j], e_0,np.sqrt(e_std))  
+    delta = a1*Tion**(0.6666666666)/(1.0+a2*Tion**a3)+a4*Tion
+    
+    C = omega0*(1+delta)
+    FWHM2 = C**2*Tion
+    variance_1 = FWHM2/(2.35482)**2
+    # keV^2 to MeV^2
+    variance = variance_1 *10**-6
+    
+    return variance #note: this is returned in MeV!!!!
 
-#Z = np.exp(-(((Y-e_0)**2)/(2*e_std**2)))/(e_std*np.sqrt(2**np.pi)) * np.exp(-(((X-t_0)**2)/(2*t_std**2)))/(t_std*np.sqrt(2**np.pi))
+'''
+Define the different temperature profiles centered around bang time:
+(need to figure out what to set temperature outside burn time range)
+'''
+t_0 = 200 #bang time (in picoseconds)
+burn_time = 100 #choose burn time of 100ps, take this to be equal to FWHM for now 
+t_std = burn_time / 2.35482 #converting FWHM to sigma
+
+
+#linearly increasing temperature from 4.3keV to 15keV over burn time = 100ps
+def lininc(t):    
+    
+    #temperatures constant outside burn
+    if t < (t_0 - burn_time/2):
+        return 4.3
+    
+    elif t > (t_0 + burn_time/2):
+        return 15
+    
+    else: #during burn
+        grad = (15 - 4.3) / burn_time
+        y_midpoint = (15 + 4.3) / 2
+        c = y_midpoint - grad * t_0
+        return grad * t + c #returns temperature in keV
+    
+    
+#linearly decreasing temperature from 10keV to 0 over burn time = 100ps.
+def lindec(t):
+    
+    #temperatures constant outside burn
+    if t < (t_0 - burn_time/2):
+        return 10
+    
+    elif t > (t_0 + burn_time/2):
+        return 0.0001 #to avoid dividing by zero (?)
+    
+    #during burn
+    else:
+        grad = (0 - 10) / burn_time
+        y_midpoint = 5
+        c = y_midpoint - grad * t_0
+        
+        return grad * t + c #returns temperature in keV
+    
+#constant temperature profile 
+def const_temp(t):
+    return 10 #in keV
+
+#Define Source function S(E,t)
+def S(E, t):
+    
+    #normalisation constant (still need to calculate this!! use this for now)
+    norm = 1/np.sqrt(2 * np.pi)
+    
+    #make the temperature profile modifiable in function argument!!
+    E_0, E_var = DTprimspecmoments(lininc(t)) #chosen lininc() for now
+    E_std = np.sqrt(E_var)
+    
+    #gaussian in energy (taken in units of MeV)
+    energy_gauss  = np.exp(-(E - E_0)**2 / (2 * E_std**2))
+    
+    #gaussian in time
+    time_gauss = np.exp(-(t - t_0)**2 / (2 * t_std**2))
+    
+    return norm * energy_gauss * time_gauss
 
 #%%
+'''
+Validating temperature profiles and seeing how std varies with profile
+'''
+t = np.linspace(0,1000,1000)
+T = np.zeros(len(t))
+for i in range(len(t)):
+    T[i] = lininc(t[i])
 
+sigma = np.sqrt(DTprimspecmoments(T)[1])
+
+plt.plot(t, T)    
+plt.plot(t, sigma)
+
+
+#%%
+'''
+Plot 3 different cases, lin increasing, decreasing, and constant - see differences 
+'''
+#make a grid
+n_energy, n_time = (500, 500) #number of grid points
+energies = np.linspace(13, 15, n_energy) #in MeV
+times = np.linspace(100, 300, n_time) #t=100 to t=300
+
+#create grid
+E_grid, t_grid = np.meshgrid(energies, times) 
+Z = np.zeros([n_time, n_energy])
+
+#creating data
+for i in range(len(Z)):
+    for j in range(len(Z[0])):
+        Z[i][j] = S(E_grid[i][j], t_grid[i][j])
+        
+        
+#plot surface
 fig = plt.figure()
 ax = Axes3D(fig)
-ax.plot_surface(X, Y, Z1)
-ax.set_xlabel('time (ps)')
-ax.set_ylabel('energy (Mev)')
+surf = ax.plot_surface(E_grid, t_grid, Z, cmap=cm.coolwarm)
+
+#customise plot
+ax.set_ylabel('time (ps)')
+ax.set_xlabel('energy (Mev)')
 ax.set_zlabel('pdf')
 ax.azim = -50
+fig.colorbar(surf, shrink=0.5, aspect=15)
+
 plt.show()
 
 #%%
-for i in range(len(X)):
-    
+
+#This section is for finding normalisation factors
+
+
+#Same as Aiden's code, but this only returns variance
+def sigma(Tion):
+# Mean calculation
+    a1 = 5.30509
+    a2 = 2.4736e-3
+    a3 = 1.84
+    a4 = 1.3818
       
+    mean_shift = a1*Tion**(0.6666666666)/(1.0+a2*Tion**a3)+a4*Tion
     
-    e_0, e_std = DTprimspecmoments(temperature_increase[i])
-    print(e_0, e_std)
+    # keV to MeV
+    mean_shift /= 1e3
+    
+    mean = 14.021 + mean_shift
+    
+    # Variance calculation
+    omega0 = 177.259
+    a1 = 5.1068e-4
+    a2 = 7.6223e-3
+    a3 = 1.78
+    a4 = 8.7691e-5
+    
+    delta = a1*Tion**(0.6666666666)/(1.0+a2*Tion**a3)+a4*Tion
+    
+    C = omega0*(1+delta)
+    FWHM2 = C**2*Tion
+    variance_1 = FWHM2/(2.35482)**2
+    # keV^2 to MeV^2
+    variance = variance_1 *10**-6
+    
+    return variance #note: this is returned in MeV!!!!
+
+
+
+
+
+#Creating a lambda function for lininc
+def g(x):
+    return sigma(lininc(x))*np.exp(-(x-t_0)**2/(2*t_std**2))*np.sqrt(2*np.pi)
+
+
+lininc_lambda= lambda x:g(x)
+
+
+#Creating a lambda function for lindec
+def h(x):
+    return sigma(lindec(x))*np.exp(-(x-t_0)**2/(2*t_std**2))*np.sqrt(2*np.pi)
+lindec_lambda= lambda x:h(x)
+
+
+#Integrating both functions
+
+#First integrating lininc
+#i and j are the value and the error of the integral
+i , j = scipy.integrate.quad(lininc_lambda, 150, 250)
+#This is A
+print(1/i)
+
+
+#Now integrating lindec
+k , l = scipy.integrate.quad(lindec_lambda, 150, 250)
+#This is A
+print(1/k)
+
+
