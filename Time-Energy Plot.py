@@ -7,10 +7,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
-from scipy import integrate
-import scipy
+from scipy.integrate import quad
 
-#%%
 # Returns the mean energy and variance based on Ballabio (Code from Aiden)
 # Tion in keV
 def DTprimspecmoments(Tion):
@@ -172,7 +170,7 @@ lininc_lambda= lambda x:g(x)
 
 #Creating a lambda function for lindec
 def h(x):
-    return np.sqrt(DTprimspecmoments(lininc(x))[1])*np.exp(-(x-t_0)**2/(2*t_std**2))*np.sqrt(2*np.pi)
+    return np.sqrt(DTprimspecmoments(lindec(x))[1])*np.exp(-(x-t_0)**2/(2*t_std**2))*np.sqrt(2*np.pi)
 lindec_lambda= lambda x:h(x)
 
 
@@ -180,14 +178,15 @@ lindec_lambda= lambda x:h(x)
 
 #First integrating lininc
 #i and j are the value and the error of the integral
-i , j = scipy.integrate.quad(lininc_lambda, 150, 250)
+i , j = quad(lininc_lambda, 150, 250)
 #This is A
-print(1/i)
+print(1/i, j)
 
 
 #Now integrating lindec
-k , l = scipy.integrate.quad(lindec_lambda, 150, 250)
+k , l = quad(lindec_lambda, 150, 250)
 #This is A
-print(1/k)
+
+print(1/k, l)
 
 
