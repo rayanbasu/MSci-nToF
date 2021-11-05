@@ -161,7 +161,7 @@ plt.plot(t, sigma)
 Plot 3 different cases, lin increasing, decreasing, and constant - see differences 
 '''
 #make a grid
-n_energy, n_time = (500, 500) #number of grid points
+n_energy, n_time = (100, 100) #number of grid points
 energies = np.linspace(13, 15, n_energy) #in MeV
 times = np.linspace(100, 300, n_time) #t=100 to t=300
 
@@ -203,7 +203,7 @@ lininc_lambda= lambda x:g(x)
 
 #Creating a lambda function for lindec
 def h(x):
-    return np.sqrt(DTprimspecmoments(lininc(x))[1])*np.exp(-(x-t_0)**2/(2*t_std**2))*np.sqrt(2*np.pi)
+    return np.sqrt(DTprimspecmoments(lindec(x))[1])*np.exp(-(x-t_0)**2/(2*t_std**2))*np.sqrt(2*np.pi)
 lindec_lambda= lambda x:h(x)
 
 
@@ -211,14 +211,47 @@ lindec_lambda= lambda x:h(x)
 
 #First integrating lininc
 #i and j are the value and the error of the integral
-i , j = scipy.integrate.quad(lininc_lambda, 150, 250)
+i , j = scipy.integrate.quad(lininc_lambda, 0, np.inf)
 #This is A
 print(1/i)
 
 
 #Now integrating lindec
-k , l = scipy.integrate.quad(lindec_lambda, 150, 250)
+k , l = scipy.integrate.quad(lindec_lambda, 0, np.inf)
 #This is A
 print(1/k)
 
 
+#%%
+particles_num = 20
+import pandas as pd
+
+
+time_emitted = []
+velocities = []
+number_of_particles = []
+
+particle_df = pd.DataFrame(columns = ['time emitted', 'energy', ' number of particles'])
+
+
+for i in range(len(Z)):
+    for j in range(len(Z)):
+        if particles_num*Z[i][j]>1:
+            time_emitted.append(t_grid[i][j])
+            velocities.append(np.sqrt(E_grid[i][j]*1.6e-13*2/(1.67e-27)))
+            number_of_particles.append(np.round(particles_num*Z[i][j]))
+
+
+
+#%%
+
+detector = 1000000
+
+
+time_arrive = []
+
+for i in range(len(number_of_particles)):
+    time_arrive.append(time_emitted[i]+detector/velocities[i]*1e12)
+    
+
+plt.plot(time_arrive,number_of_particles)
