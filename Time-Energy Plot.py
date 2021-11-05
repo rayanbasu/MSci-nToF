@@ -159,7 +159,7 @@ plt.title("Linearly Increasing Temperature")
 plt.show()
 
 #%%
-
+import scipy
 #This section is for finding normalisation factors
 
 #Creating a lambda function for lininc
@@ -179,28 +179,28 @@ lindec_lambda= lambda x:h(x)
 
 #First integrating lininc
 #i and j are the value and the error of the integral
-<<<<<<< HEAD
+
 i , j = scipy.integrate.quad(lininc_lambda, 0, np.inf)
-=======
+
 i , j = quad(lininc_lambda, 150, 250)
->>>>>>> 00ef2cd23b2b358ebef80905c79556097acfe266
+
 #This is A
 print(1/i, j)
 
 
 #Now integrating lindec
-<<<<<<< HEAD
+
 k , l = scipy.integrate.quad(lindec_lambda, 0, np.inf)
-=======
+
 k , l = quad(lindec_lambda, 150, 250)
->>>>>>> 00ef2cd23b2b358ebef80905c79556097acfe266
+
 #This is A
 
 print(1/k, l)
 
 
 #%%
-particles_num = 20
+particles_num = 200
 import pandas as pd
 
 
@@ -214,6 +214,7 @@ particle_df = pd.DataFrame(columns = ['time emitted', 'energy', ' number of part
 for i in range(len(Z)):
     for j in range(len(Z)):
         if particles_num*Z[i][j]>1:
+            print('y')
             time_emitted.append(t_grid[i][j])
             velocities.append(np.sqrt(E_grid[i][j]*1.6e-13*2/(1.67e-27)))
             number_of_particles.append(np.round(particles_num*Z[i][j]))
