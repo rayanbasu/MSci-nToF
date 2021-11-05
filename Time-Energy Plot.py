@@ -7,10 +7,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
-from scipy import integrate
-import scipy
+from scipy.integrate import quad
 
-#%%
 # Returns the mean energy and variance based on Ballabio (Code from Aiden)
 # Tion in keV
 def DTprimspecmoments(Tion):
@@ -44,37 +42,6 @@ def DTprimspecmoments(Tion):
     
     return mean, variance #note: this is returned in MeV!!!
 
-def sigma(Tion):
-# Mean calculation
-    a1 = 5.30509
-    a2 = 2.4736e-3
-    a3 = 1.84
-    a4 = 1.3818
-      
-    mean_shift = a1*Tion**(0.6666666666)/(1.0+a2*Tion**a3)+a4*Tion
-    
-    # keV to MeV
-    mean_shift /= 1e3
-    
-    mean = 14.021 + mean_shift
-    
-    # Variance calculation
-    omega0 = 177.259
-    a1 = 5.1068e-4
-    a2 = 7.6223e-3
-    a3 = 1.78
-    a4 = 8.7691e-5
-    
-    delta = a1*Tion**(0.6666666666)/(1.0+a2*Tion**a3)+a4*Tion
-    
-    C = omega0*(1+delta)
-    FWHM2 = C**2*Tion
-    variance_1 = FWHM2/(2.35482)**2
-    # keV^2 to MeV^2
-    variance = variance_1 *10**-6
-    
-    return variance #note: this is returned in MeV!!!!
-
 '''
 Define the different temperature profiles centered around bang time:
 (need to figure out what to set temperature outside burn time range)
@@ -101,7 +68,7 @@ def lininc(t):
         return grad * t + c #returns temperature in keV
     
     
-#linearly decreasing temperature from 10keV to 0 over burn time = 100ps.
+#linearly decreasing temperature from 10keV to 1keV over burn time = 100ps.
 def lindec(t):
     
     #temperatures constant outside burn
@@ -109,12 +76,12 @@ def lindec(t):
         return 10
     
     elif t > (t_0 + burn_time/2):
-        return 0.0001 #to avoid dividing by zero (?)
+        return 1 #to avoid dividing by zero (?)
     
     #during burn
     else:
-        grad = (0 - 10) / burn_time
-        y_midpoint = 5
+        grad = (1 - 10) / burn_time
+        y_midpoint = 5.5
         c = y_midpoint - grad * t_0
         
         return grad * t + c #returns temperature in keV
@@ -127,7 +94,7 @@ def const_temp(t):
 def S(E, t):
     
     #normalisation constant (still need to calculate this!! use this for now)
-    norm = 1/np.sqrt(2 * np.pi)
+    norm = 0.021249110488318672
     
     #make the temperature profile modifiable in function argument!!
     E_0, E_var = DTprimspecmoments(lininc(t)) #chosen lininc() for now
@@ -183,9 +150,11 @@ surf = ax.plot_surface(E_grid, t_grid, Z, cmap=cm.coolwarm)
 #customise plot
 ax.set_ylabel('time (ps)')
 ax.set_xlabel('energy (Mev)')
-ax.set_zlabel('pdf')
-ax.azim = -50
+#ax.set_zlabel('pdf')
+#ax.set_yticks(np.arange(0,0.125,0.025))
+ax.azim =+80
 fig.colorbar(surf, shrink=0.5, aspect=15)
+plt.title("Linearly Increasing Temperature")
 
 plt.show()
 
@@ -200,7 +169,6 @@ def g(x):
 
 lininc_lambda= lambda x:g(x)
 
-
 #Creating a lambda function for lindec
 def h(x):
     return np.sqrt(DTprimspecmoments(lindec(x))[1])*np.exp(-(x-t_0)**2/(2*t_std**2))*np.sqrt(2*np.pi)
@@ -211,15 +179,24 @@ lindec_lambda= lambda x:h(x)
 
 #First integrating lininc
 #i and j are the value and the error of the integral
+<<<<<<< HEAD
 i , j = scipy.integrate.quad(lininc_lambda, 0, np.inf)
+=======
+i , j = quad(lininc_lambda, 150, 250)
+>>>>>>> 00ef2cd23b2b358ebef80905c79556097acfe266
 #This is A
-print(1/i)
+print(1/i, j)
 
 
 #Now integrating lindec
+<<<<<<< HEAD
 k , l = scipy.integrate.quad(lindec_lambda, 0, np.inf)
+=======
+k , l = quad(lindec_lambda, 150, 250)
+>>>>>>> 00ef2cd23b2b358ebef80905c79556097acfe266
 #This is A
-print(1/k)
+
+print(1/k, l)
 
 
 #%%
