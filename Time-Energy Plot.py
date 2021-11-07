@@ -200,17 +200,22 @@ print(1/k, l)
 
 
 #%%
-particles_num = 200
+
+#This is multiplied by the pdf distribution to give the number of particles for each time and energy
+particles_num = 10000
 import pandas as pd
 
 
+#Thre arrays to record the time a particle was emitted, its velocity, and the number of particles witht those time and velocity values
 time_emitted = []
 velocities = []
 number_of_particles = []
 
+#Just a dataffa
 particle_df = pd.DataFrame(columns = ['time emitted', 'energy', ' number of particles'])
 
 
+#Goes thorugh the 2D arrays containing each energy and time and finds the number of particles for each of those values
 for i in range(len(Z)):
     for j in range(len(Z)):
         if particles_num*Z[i][j]>1:
@@ -222,14 +227,18 @@ for i in range(len(Z)):
 
 
 #%%
+#Detector length
+detector = 0
 
-detector = 1000000
 
-
+#Time it arrives at the detector is recorded in this array
 time_arrive = []
 
 for i in range(len(number_of_particles)):
     time_arrive.append(time_emitted[i]+detector/velocities[i]*1e12)
     
+#Plotting the number of particles arriving at each time
+fig, ax = plt.subplots()
+scatter = ax.scatter(time_arrive,number_of_particles, c = velocities)
 
-plt.plot(time_arrive,number_of_particles)
+plt.show()
