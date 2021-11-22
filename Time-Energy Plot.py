@@ -115,7 +115,7 @@ Validating temperature profiles and seeing how std varies with profile
 t = np.linspace(0,1000,1000)
 T = np.zeros(len(t))
 for i in range(len(t)):
-    T[i] = lininc(t[i])
+    T[i] = lindec(t[i])
 
 sigma = np.sqrt(DTprimspecmoments(T)[1])
 
@@ -209,6 +209,7 @@ import pandas as pd
 #Thre arrays to record the time a particle was emitted, its velocity, and the number of particles witht those time and velocity values
 time_emitted = []
 velocities = []
+energies = []
 number_of_particles = []
 
 #Just a dataffa
@@ -219,8 +220,9 @@ particle_df = pd.DataFrame(columns = ['time emitted', 'energy', ' number of part
 for i in range(len(Z)):
     for j in range(len(Z)):
         if particles_num*Z[i][j]>1:
-            print('y')
+
             time_emitted.append(t_grid[i][j])
+            energies.append(E_grid[i][j])
             velocities.append(np.sqrt(E_grid[i][j]*1.6e-13*2/(1.67e-27)))
             number_of_particles.append(np.round(particles_num*Z[i][j]))
 
@@ -228,17 +230,63 @@ for i in range(len(Z)):
 
 #%%
 #Detector length
-detector = 0
-
-
+detector_placements=  np.linspace(0,1,11)
 #Time it arrives at the detector is recorded in this array
-time_arrive = []
 
+
+
+fig, ax = plt.subplots(nrows=11, ncols=1)
+fig.set_size_inches(18, 100)
+fig.suptitle('Decreasing Temperature', fontsize = 90)
+ax[10].set_xlabel('time of arrival (ps)', fontsize = 70)
+ax[5].set_ylabel('flux', fontsize = 70)
+
+
+
+
+
+for detector in detector_placements[:]:
+    time_arrive = []
+    
+    for i in range(len(number_of_particles)):
+        time_arrive.append(time_emitted[i]+detector/velocities[i]*1e12)
+    
+    
+    #Plotting the number of particles arriving at each time
+
+    scatter = ax[np.int(detector*10)].scatter(time_arrive,number_of_particles, c = energies, cmap = cm.plasma)
+    #fig.colorbar(scatter, shrink=1, aspect=15)
+    ax[np.int(detector*10)].set_title('detector at ' + np.str(np.around(detector,1))+ 'm', fontsize = 30)
+
+
+fig.subplots_adjust(right=0.8)
+cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
+cbar_ax.tick_params(labelsize=30)
+
+cbar = fig.colorbar(scatter, aspect=100, cax=cbar_ax)
+cbar.set_label('Energies (MeV)', fontsize = 70, rotation=270)
+
+fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc.png', dpi=100)    
+
+#%%
+fig, ax = plt.subplots()
+
+detector = 10
+
+time_arrive = []
+    
 for i in range(len(number_of_particles)):
     time_arrive.append(time_emitted[i]+detector/velocities[i]*1e12)
     
+    
 #Plotting the number of particles arriving at each time
-fig, ax = plt.subplots()
-scatter = ax.scatter(time_arrive,number_of_particles, c = velocities)
 
-plt.show()
+scatter = plt.scatter(time_arrive,number_of_particles/max(number_of_particles), c = energies, cmap = cm.plasma)
+fig.colorbar(scatter, shrink=1, aspect=15, label = 'Energies (MeV)')
+plt.title('detector at ' + np.str(np.around(detector,1))+ 'm', fontsize = 10)
+plt.xlabel('Time of Arrival (ps)')
+plt.ylabel('Normalised Flux')
+fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc1.png', dpi=100)    
+
+
+
