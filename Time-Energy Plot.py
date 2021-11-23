@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from scipy.integrate import quad
-
+from scipy.stats import skew
 # Returns the mean energy and variance based on Ballabio (Code from Aiden)
 # Tion in keV
 def DTprimspecmoments(Tion):
@@ -97,7 +97,7 @@ def S(E, t):
     norm = 0.021249110488318672
     
     #make the temperature profile modifiable in function argument!!
-    E_0, E_var = DTprimspecmoments(lininc(t)) #chosen lininc() for now
+    E_0, E_var = DTprimspecmoments(lindec(t)) #chosen lininc() for now
     E_std = np.sqrt(E_var)
     
     #gaussian in energy (taken in units of MeV)
@@ -202,7 +202,7 @@ print(1/k, l)
 #%%
 
 #This is multiplied by the pdf distribution to give the number of particles for each time and energy
-particles_num = 10000
+particles_num = 1000
 import pandas as pd
 
 
@@ -257,7 +257,7 @@ for detector in detector_placements[:]:
     scatter = ax[np.int(detector*10)].scatter(time_arrive,number_of_particles, c = energies, cmap = cm.plasma)
     #fig.colorbar(scatter, shrink=1, aspect=15)
     ax[np.int(detector*10)].set_title('detector at ' + np.str(np.around(detector,1))+ 'm', fontsize = 30)
-
+    print(scipy.stats.skew(time_arrive))
 
 fig.subplots_adjust(right=0.8)
 cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
@@ -271,7 +271,8 @@ fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc.png', dpi
 #%%
 fig, ax = plt.subplots()
 
-detector = 10
+detector = 2.6
+
 
 time_arrive = []
     
@@ -286,7 +287,33 @@ fig.colorbar(scatter, shrink=1, aspect=15, label = 'Energies (MeV)')
 plt.title('detector at ' + np.str(np.around(detector,1))+ 'm', fontsize = 10)
 plt.xlabel('Time of Arrival (ps)')
 plt.ylabel('Normalised Flux')
-fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc1.png', dpi=100)    
+fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc2.6.png', dpi=100)    
+
+#%%
+skews=[]
+detectors=np.linspace(0,10,21)
+for detector in detectors:
 
 
 
+    time_arrive = []
+        
+    for i in range(len(number_of_particles)):
+        time_arrive.append(time_emitted[i]+detector/velocities[i]*1e12)
+
+    skewness = np.array([])
+    for i in range(len(number_of_particles)):
+        particles = np.int(number_of_particles[i])
+        print(i)
+        for j in range(particles):
+            skewness = np.append(skewness,time_arrive[i])
+    
+    print(scipy.stats.skew(skewness))
+    skews.append(scipy.stats.skew(skewness))
+
+
+plt.plot(detectors,skews)
+plt.xlabel('detector placement (m)')
+plt.ylabel('Skewness')
+plt.grid()
+plt.title('Linearly Decreasing')
