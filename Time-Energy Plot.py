@@ -242,7 +242,60 @@ fig.suptitle('Decreasing Temperature', fontsize = 90)
 ax[10].set_xlabel('time of arrival (ps)', fontsize = 70)
 ax[5].set_ylabel('flux', fontsize = 70)
             
+'''
+Ewan's attempt to plot 3d plots similar to vlad paper (ignore!!!)
 
+#detector distances from source (in metres)
+detectors = np.arange(0.02, 100, 10)
+
+#to record times particles arrive at detectors
+time_arrive = np.array([])
+
+for i in range(len(number_of_particles)):
+    print(time_emitted[i] + detectors/velocities[i]*1e12)
+    time_arrive = np.append(time_arrive, 
+                            time_emitted[i] + detectors/velocities[i]*1e12) #in ps
+
+time_arrive = time_arrive.reshape((len(number_of_particles), len(detectors)))
+time_arrive = time_arrive.transpose()
+
+
+#%%
+#plotting 3d temporal and distance spread
+
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+
+#for colouring plots
+#def cc(arg):
+   # return mcolors.to_rgba(arg, alpha=0.6)
+
+xs = time_arrive #t variable
+verts = []
+zs = detectors #detector positions
+for i in range(len(detectors)):
+    ys = number_of_particles #number of particles from given squares
+    verts.append(list(zip(xs[i], ys)))
+
+poly = PolyCollection(verts) #, facecolors=[cc('r'), cc('g'), cc('b'), cc('y')])
+
+
+poly.set_alpha(0.8)
+
+ax.add_collection3d(poly, zs, zdir='y')
+
+ax.set_xlabel('Time (ps)')
+ax.set_xlim3d(0, 2000000)
+ax.set_ylabel('Position (m)')
+ax.set_ylim3d(0, 102)
+ax.set_zlabel('Flux')
+ax.set_zlim3d(0,20000)
+
+#ax.set_yticks(np.arange(0,0.125,0.025))
+
+plt.show()
+
+'''
 #Detector positions:
 detector_placements =  np.linspace(0, 1, 11)
 
@@ -314,3 +367,6 @@ plt.xlabel('detector placement (m)')
 plt.ylabel('Skewness')
 plt.grid()
 plt.title('Linearly Decreasing')
+
+
+
