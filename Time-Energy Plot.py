@@ -197,18 +197,20 @@ print(1/k, l)
 
 
 #%%
-
-#This is multiplied by the pdf distribution to give the number of particles for each time and energy
+'''
+This is multiplied by the pdf distribution to give the number of particles for
+each time and energy
+'''
 particles_num = 1000
 
 
-#Thre arrays to record the time a particle was emitted, its velocity, and the number of particles witht those time and velocity values
-time_emitted = []
-velocities = []
-energies = []
-number_of_particles = []
+#Empty arrays to record data:
+time_emitted = np.array([]) #time particle was emitted
+velocities = np.array([]) #particle velocities
+number_of_particles = np.array([]) #number of respective particles with above values
+energies = [] #turn into array!!!
 
-#Just a dataffa
+#Just a dataframe
 particle_df = pd.DataFrame(columns = ['time emitted', 'energy', ' number of particles'])
 
 
