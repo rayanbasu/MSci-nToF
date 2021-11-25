@@ -291,10 +291,8 @@ plt.ylabel('Normalised Flux')
 #%%
 skews=[]
 detectors=np.linspace(0,10,21)
+
 for detector in detectors:
-
-
-
     time_arrive = []
         
     for i in range(len(number_of_particles)):
