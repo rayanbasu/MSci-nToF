@@ -223,6 +223,9 @@ for i in range(len(Z)):
             #time in picoseconds
             time_emitted = np.append(time_emitted, t_grid[i][j])
             
+            #energies in MeV
+            energies.append(E_grid[i][j])
+            
             #velocities in ms^-1
             velocities = np.append(velocities, np.sqrt(E_grid[i][j] * 1.6e-13 * 2
                                       / 1.67e-27))
@@ -232,10 +235,8 @@ for i in range(len(Z)):
             number_of_particles = np.append(number_of_particles, num)
 
 #%%
-#Detector length
-detector_placements=  np.linspace(0,1,11)
-#Time it arrives at the detector is recorded in this array
-
+#Detector positions:
+detector_placements =  np.linspace(0,1,11)
 
 
 fig, ax = plt.subplots(nrows=11, ncols=1)
@@ -245,8 +246,8 @@ ax[10].set_xlabel('time of arrival (ps)', fontsize = 70)
 ax[5].set_ylabel('flux', fontsize = 70)
 
 
-
-for detector in detector_placements[:]:
+#Time it arrives at the detector is recorded in this array
+for detector in detector_placements:
     time_arrive = []
     
     for i in range(len(number_of_particles)):
@@ -267,7 +268,7 @@ cbar_ax.tick_params(labelsize=30)
 cbar = fig.colorbar(scatter, aspect=100, cax=cbar_ax)
 cbar.set_label('Energies (MeV)', fontsize = 70, rotation=270)
 
-fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc.png', dpi=100)    
+#fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc.png', dpi=100)    
 
 #%%
 fig, ax = plt.subplots()
@@ -288,7 +289,7 @@ fig.colorbar(scatter, shrink=1, aspect=15, label = 'Energies (MeV)')
 plt.title('detector at ' + np.str(np.around(detector,1))+ 'm', fontsize = 10)
 plt.xlabel('Time of Arrival (ps)')
 plt.ylabel('Normalised Flux')
-fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc2.6.png', dpi=100)    
+#fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc2.6.png', dpi=100)    
 
 #%%
 skews=[]
@@ -309,8 +310,8 @@ for detector in detectors:
         for j in range(particles):
             skewness = np.append(skewness,time_arrive[i])
     
-    print(scipy.stats.skew(skewness))
-    skews.append(scipy.stats.skew(skewness))
+    print(skew(skewness))
+    skews.append(skew(skewness))
 
 
 plt.plot(detectors,skews)
