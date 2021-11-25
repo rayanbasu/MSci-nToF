@@ -295,6 +295,8 @@ ax.set_zlim3d(0,20000)
 
 plt.show()
 
+#need to bin these results so that can show temporal spread !!! (fix)
+
 '''
 #Detector positions:
 detector_placements =  np.linspace(0, 1, 11)
