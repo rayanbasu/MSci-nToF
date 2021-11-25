@@ -126,6 +126,7 @@ plt.plot(t, sigma)
 #%%
 '''
 Plot 3 different cases, lin increasing, decreasing, and constant - see differences 
+need to wrap this all in a function !!
 '''
 #make a grid
 n_energy, n_time = (100, 100) #number of grid points
