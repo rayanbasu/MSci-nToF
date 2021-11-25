@@ -233,18 +233,18 @@ for i in range(len(Z)):
             #save integer number of particles
             num = np.round(particles_num  * Z[i][j])
             number_of_particles = np.append(number_of_particles, num)
-
-#%%
-#Detector positions:
-detector_placements =  np.linspace(0,1,11)
-
-
+            
+          
+#creating fig and ax
 fig, ax = plt.subplots(nrows=11, ncols=1)
 fig.set_size_inches(18, 100)
 fig.suptitle('Decreasing Temperature', fontsize = 90)
 ax[10].set_xlabel('time of arrival (ps)', fontsize = 70)
 ax[5].set_ylabel('flux', fontsize = 70)
+            
 
+#Detector positions:
+detector_placements =  np.linspace(0, 1, 11)
 
 #Time it arrives at the detector is recorded in this array
 for detector in detector_placements:
@@ -255,10 +255,11 @@ for detector in detector_placements:
     
     
     #Plotting the number of particles arriving at each time
-
-    scatter = ax[np.int(detector*10)].scatter(time_arrive,number_of_particles, c = energies, cmap = cm.plasma)
+    scatter = ax[np.int(detector*10)].scatter(time_arrive,number_of_particles, 
+                                              c = energies, cmap = cm.plasma)
     #fig.colorbar(scatter, shrink=1, aspect=15)
-    ax[np.int(detector*10)].set_title('detector at ' + np.str(np.around(detector,1))+ 'm', fontsize = 30)
+    ax[np.int(detector*10)].set_title('detector at ' + np.str(np.around(detector,1))+ 'm',
+                                      fontsize = 30)
     print(skew(time_arrive))
 
 fig.subplots_adjust(right=0.8)
@@ -271,11 +272,7 @@ cbar.set_label('Energies (MeV)', fontsize = 70, rotation=270)
 #fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc.png', dpi=100)    
 
 #%%
-fig, ax = plt.subplots()
-
 detector = 2.6
-
-
 time_arrive = []
     
 for i in range(len(number_of_particles)):
