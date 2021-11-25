@@ -183,7 +183,6 @@ lindec_lambda= lambda x:h(x)
 
 #First integrating lininc
 #i and j are the value and the error of the integral
-
 i , j = sp.integrate.quad(lininc_lambda, 0, np.inf)
 
 #This is A
@@ -191,13 +190,9 @@ print(1/i, j)
 
 
 #Now integrating lindec
-
 k , l = sp.integrate.quad(lindec_lambda, 0, np.inf)
 
-k , l = quad(lindec_lambda, 150, 250)
-
 #This is A
-
 print(1/k, l)
 
 
