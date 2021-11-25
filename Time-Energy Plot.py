@@ -8,7 +8,6 @@ import scipy as sp
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
-from scipy.integrate import quad
 from scipy.stats import skew
 import pandas as pd
 from matplotlib.collections import PolyCollection
@@ -185,9 +184,7 @@ lindec_lambda= lambda x:h(x)
 #First integrating lininc
 #i and j are the value and the error of the integral
 
-i , j = scipy.integrate.quad(lininc_lambda, 0, np.inf)
-
-i , j = quad(lininc_lambda, 150, 250)
+i , j = sp.integrate.quad(lininc_lambda, 0, np.inf)
 
 #This is A
 print(1/i, j)
@@ -208,7 +205,6 @@ print(1/k, l)
 
 #This is multiplied by the pdf distribution to give the number of particles for each time and energy
 particles_num = 1000
-import pandas as pd
 
 
 #Thre arrays to record the time a particle was emitted, its velocity, and the number of particles witht those time and velocity values
