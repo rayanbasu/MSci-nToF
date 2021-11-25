@@ -4,11 +4,15 @@ Created on Wed Oct 20 21:39:09 2021
 @author: rayan & ewan
 """
 import numpy as np
+import scipy as sp
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
-from scipy.integrate import quad
 from scipy.stats import skew
+import pandas as pd
+from matplotlib.collections import PolyCollection
+from matplotlib import colors as mcolors
+
 # Returns the mean energy and variance based on Ballabio (Code from Aiden)
 # Tion in keV
 def DTprimspecmoments(Tion):
@@ -126,6 +130,7 @@ plt.plot(t, sigma)
 #%%
 '''
 Plot 3 different cases, lin increasing, decreasing, and constant - see differences 
+need to wrap this all in a function !!
 '''
 #make a grid
 n_energy, n_time = (100, 100) #number of grid points
@@ -159,7 +164,6 @@ plt.title("Linearly Increasing Temperature")
 plt.show()
 
 #%%
-import scipy
 #This section is for finding normalisation factors
 
 #Creating a lambda function for lininc
@@ -179,73 +183,126 @@ lindec_lambda= lambda x:h(x)
 
 #First integrating lininc
 #i and j are the value and the error of the integral
-
-i , j = scipy.integrate.quad(lininc_lambda, 0, np.inf)
-
-i , j = quad(lininc_lambda, 150, 250)
+i , j = sp.integrate.quad(lininc_lambda, 0, np.inf)
 
 #This is A
 print(1/i, j)
 
 
 #Now integrating lindec
-
-k , l = scipy.integrate.quad(lindec_lambda, 0, np.inf)
-
-k , l = quad(lindec_lambda, 150, 250)
+k , l = sp.integrate.quad(lindec_lambda, 0, np.inf)
 
 #This is A
-
 print(1/k, l)
 
 
 #%%
-
-#This is multiplied by the pdf distribution to give the number of particles for each time and energy
+'''
+This is multiplied by the pdf distribution to give the number of particles for
+each time and energy
+'''
 particles_num = 1000
-import pandas as pd
 
 
-#Thre arrays to record the time a particle was emitted, its velocity, and the number of particles witht those time and velocity values
-time_emitted = []
-velocities = []
-energies = []
-number_of_particles = []
+#Empty arrays to record data:
+time_emitted = np.array([]) #time particle was emitted
+velocities = np.array([]) #particle velocities
+number_of_particles = np.array([]) #number of respective particles with above values
+energies = [] #turn into array!!!
 
-#Just a dataffa
+#Just a dataframe
 particle_df = pd.DataFrame(columns = ['time emitted', 'energy', ' number of particles'])
 
 
 #Goes thorugh the 2D arrays containing each energy and time and finds the number of particles for each of those values
+#i.e. saving the data of grid points if values > 1
 for i in range(len(Z)):
-    for j in range(len(Z)):
-        if particles_num*Z[i][j]>1:
-
-            time_emitted.append(t_grid[i][j])
+    for j in range(len(Z[0])):
+        if particles_num * Z[i][j]>1:
+            
+            #time in picoseconds
+            time_emitted = np.append(time_emitted, t_grid[i][j])
+            
+            #energies in MeV
             energies.append(E_grid[i][j])
-            velocities.append(np.sqrt(E_grid[i][j]*1.6e-13*2/(1.67e-27)))
-            number_of_particles.append(np.round(particles_num*Z[i][j]))
-
-
-
-#%%
-#Detector length
-detector_placements=  np.linspace(0,1,11)
-#Time it arrives at the detector is recorded in this array
-
-
-
+            
+            #velocities in ms^-1
+            velocities = np.append(velocities, np.sqrt(E_grid[i][j] * 1.6e-13 * 2
+                                      / 1.67e-27))
+            
+            #save integer number of particles
+            num = np.round(particles_num  * Z[i][j])
+            number_of_particles = np.append(number_of_particles, num)
+            
+          
+#creating fig and ax
 fig, ax = plt.subplots(nrows=11, ncols=1)
 fig.set_size_inches(18, 100)
 fig.suptitle('Decreasing Temperature', fontsize = 90)
 ax[10].set_xlabel('time of arrival (ps)', fontsize = 70)
 ax[5].set_ylabel('flux', fontsize = 70)
+            
+''' Ewan's attempt to plot 3d plots similar to vlad paper (ignore!!!)
+
+#detector distances from source (in metres)
+detectors = np.arange(0.02, 100, 10)
+
+#to record times particles arrive at detectors
+time_arrive = np.array([])
+
+for i in range(len(number_of_particles)):
+    print(time_emitted[i] + detectors/velocities[i]*1e12)
+    time_arrive = np.append(time_arrive, 
+                            time_emitted[i] + detectors/velocities[i]*1e12) #in ps
+
+time_arrive = time_arrive.reshape((len(number_of_particles), len(detectors)))
+time_arrive = time_arrive.transpose()
 
 
+#%%
+#plotting 3d temporal and distance spread
+
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+
+#for colouring plots
+#def cc(arg):
+   # return mcolors.to_rgba(arg, alpha=0.6)
+
+xs = time_arrive #t variable
+verts = []
+zs = detectors #detector positions
+for i in range(len(detectors)):
+    ys = number_of_particles #number of particles from given squares
+    verts.append(list(zip(xs[i], ys)))
+
+poly = PolyCollection(verts) #, facecolors=[cc('r'), cc('g'), cc('b'), cc('y')])
 
 
+poly.set_alpha(0.8)
 
-for detector in detector_placements[:]:
+ax.add_collection3d(poly, zs, zdir='y')
+
+ax.set_xlabel('Time (ps)')
+ax.set_xlim3d(0, 2000000)
+ax.set_ylabel('Position (m)')
+ax.set_ylim3d(0, 102)
+ax.set_zlabel('Flux')
+ax.set_zlim3d(0,20000)
+
+#ax.set_yticks(np.arange(0,0.125,0.025))
+
+plt.show()
+
+#need to bin these results so that can show temporal spread !!! (fix)
+
+'''
+
+#Detector positions:
+detector_placements =  np.linspace(0, 1, 11)
+
+#Time it arrives at the detector is recorded in this array
+for detector in detector_placements:
     time_arrive = []
     
     for i in range(len(number_of_particles)):
@@ -253,11 +310,12 @@ for detector in detector_placements[:]:
     
     
     #Plotting the number of particles arriving at each time
-
-    scatter = ax[np.int(detector*10)].scatter(time_arrive,number_of_particles, c = energies, cmap = cm.plasma)
+    scatter = ax[np.int(detector*10)].scatter(time_arrive,number_of_particles, 
+                                              c = energies, cmap = cm.plasma)
     #fig.colorbar(scatter, shrink=1, aspect=15)
-    ax[np.int(detector*10)].set_title('detector at ' + np.str(np.around(detector,1))+ 'm', fontsize = 30)
-    print(scipy.stats.skew(time_arrive))
+    ax[np.int(detector*10)].set_title('detector at ' + np.str(np.around(detector,1))+ 'm',
+                                      fontsize = 30)
+    print(skew(time_arrive))
 
 fig.subplots_adjust(right=0.8)
 cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
@@ -266,14 +324,10 @@ cbar_ax.tick_params(labelsize=30)
 cbar = fig.colorbar(scatter, aspect=100, cax=cbar_ax)
 cbar.set_label('Energies (MeV)', fontsize = 70, rotation=270)
 
-fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc.png', dpi=100)    
+#fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc.png', dpi=100)    
 
 #%%
-fig, ax = plt.subplots()
-
 detector = 2.6
-
-
 time_arrive = []
     
 for i in range(len(number_of_particles)):
@@ -287,15 +341,13 @@ fig.colorbar(scatter, shrink=1, aspect=15, label = 'Energies (MeV)')
 plt.title('detector at ' + np.str(np.around(detector,1))+ 'm', fontsize = 10)
 plt.xlabel('Time of Arrival (ps)')
 plt.ylabel('Normalised Flux')
-fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc2.6.png', dpi=100)    
+#fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc2.6.png', dpi=100)    
 
 #%%
 skews=[]
 detectors=np.linspace(0,10,21)
+
 for detector in detectors:
-
-
-
     time_arrive = []
         
     for i in range(len(number_of_particles)):
@@ -308,8 +360,8 @@ for detector in detectors:
         for j in range(particles):
             skewness = np.append(skewness,time_arrive[i])
     
-    print(scipy.stats.skew(skewness))
-    skews.append(scipy.stats.skew(skewness))
+    print(skew(skewness))
+    skews.append(skew(skewness))
 
 
 plt.plot(detectors,skews)
@@ -317,3 +369,6 @@ plt.xlabel('detector placement (m)')
 plt.ylabel('Skewness')
 plt.grid()
 plt.title('Linearly Decreasing')
+
+
+
