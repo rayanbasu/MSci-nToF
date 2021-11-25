@@ -215,6 +215,7 @@ particle_df = pd.DataFrame(columns = ['time emitted', 'energy', ' number of part
 
 
 #Goes thorugh the 2D arrays containing each energy and time and finds the number of particles for each of those values
+#i.e. saving the data of grid points if values > 1
 for i in range(len(Z)):
     for j in range(len(Z[0])):
         if particles_num * Z[i][j]>1:
@@ -242,8 +243,6 @@ fig.set_size_inches(18, 100)
 fig.suptitle('Decreasing Temperature', fontsize = 90)
 ax[10].set_xlabel('time of arrival (ps)', fontsize = 70)
 ax[5].set_ylabel('flux', fontsize = 70)
-
-
 
 
 
