@@ -218,15 +218,19 @@ particle_df = pd.DataFrame(columns = ['time emitted', 'energy', ' number of part
 
 #Goes thorugh the 2D arrays containing each energy and time and finds the number of particles for each of those values
 for i in range(len(Z)):
-    for j in range(len(Z)):
-        if particles_num*Z[i][j]>1:
-
-            time_emitted.append(t_grid[i][j])
-            energies.append(E_grid[i][j])
-            velocities.append(np.sqrt(E_grid[i][j]*1.6e-13*2/(1.67e-27)))
-            number_of_particles.append(np.round(particles_num*Z[i][j]))
-
-
+    for j in range(len(Z[0])):
+        if particles_num * Z[i][j]>1:
+            
+            #time in picoseconds
+            time_emitted = np.append(time_emitted, t_grid[i][j])
+            
+            #velocities in ms^-1
+            velocities = np.append(velocities, np.sqrt(E_grid[i][j] * 1.6e-13 * 2
+                                      / 1.67e-27))
+            
+            #save integer number of particles
+            num = np.round(particles_num  * Z[i][j])
+            number_of_particles = np.append(number_of_particles, num)
 
 #%%
 #Detector length
