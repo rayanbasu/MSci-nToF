@@ -242,8 +242,7 @@ fig.suptitle('Decreasing Temperature', fontsize = 90)
 ax[10].set_xlabel('time of arrival (ps)', fontsize = 70)
 ax[5].set_ylabel('flux', fontsize = 70)
             
-'''
-Ewan's attempt to plot 3d plots similar to vlad paper (ignore!!!)
+''' Ewan's attempt to plot 3d plots similar to vlad paper (ignore!!!)
 
 #detector distances from source (in metres)
 detectors = np.arange(0.02, 100, 10)
@@ -298,6 +297,7 @@ plt.show()
 #need to bin these results so that can show temporal spread !!! (fix)
 
 '''
+
 #Detector positions:
 detector_placements =  np.linspace(0, 1, 11)
 
