@@ -4,11 +4,16 @@ Created on Wed Oct 20 21:39:09 2021
 @author: rayan & ewan
 """
 import numpy as np
+import scipy as sp
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from scipy.integrate import quad
 from scipy.stats import skew
+import pandas as pd
+from matplotlib.collections import PolyCollection
+from matplotlib import colors as mcolors
+
 # Returns the mean energy and variance based on Ballabio (Code from Aiden)
 # Tion in keV
 def DTprimspecmoments(Tion):
@@ -160,7 +165,6 @@ plt.title("Linearly Increasing Temperature")
 plt.show()
 
 #%%
-import scipy
 #This section is for finding normalisation factors
 
 #Creating a lambda function for lininc
@@ -191,7 +195,7 @@ print(1/i, j)
 
 #Now integrating lindec
 
-k , l = scipy.integrate.quad(lindec_lambda, 0, np.inf)
+k , l = sp.integrate.quad(lindec_lambda, 0, np.inf)
 
 k , l = quad(lindec_lambda, 150, 250)
 
@@ -262,7 +266,7 @@ for detector in detector_placements[:]:
     scatter = ax[np.int(detector*10)].scatter(time_arrive,number_of_particles, c = energies, cmap = cm.plasma)
     #fig.colorbar(scatter, shrink=1, aspect=15)
     ax[np.int(detector*10)].set_title('detector at ' + np.str(np.around(detector,1))+ 'm', fontsize = 30)
-    print(scipy.stats.skew(time_arrive))
+    print(skew(time_arrive))
 
 fig.subplots_adjust(right=0.8)
 cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
