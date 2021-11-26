@@ -56,7 +56,7 @@ t_std = burn_time / 2.35482 #converting FWHM to sigma
 
 
 #linearly increasing temperature from 4.3keV to 15keV over burn time = 100ps
-def lininc(t, Tmin = 4.3, Tmax = 20):    
+def lininc(t, Tmin = 4.3, Tmax = 50):    
     
     #temperatures constant outside burn
     if t < (t_0 - burn_time/2):
@@ -73,7 +73,7 @@ def lininc(t, Tmin = 4.3, Tmax = 20):
     
     
 #linearly decreasing temperature from 10keV to 1keV over burn time = 100ps.
-def lindec(t, Tmin = 1, Tmax = 10):
+def lindec(t, Tmin = 1, Tmax = 40):
     
     #temperatures constant outside burn
     if t < (t_0 - burn_time/2):
@@ -101,7 +101,7 @@ def S(E, t):
     norm = 0.021249110488318672
     
     #make the temperature profile modifiable in function argument!!
-    E_0, E_var = DTprimspecmoments(lininc(t)) #chosen lininc() for now
+    E_0, E_var = DTprimspecmoments(lindec(t)) #chosen lininc() for now
     E_std = np.sqrt(E_var)
     
     #gaussian in energy (taken in units of MeV)
@@ -119,7 +119,7 @@ Validating temperature profiles and seeing how std varies with profile
 t = np.linspace(0,1000,1000)
 T = np.zeros(len(t))
 for i in range(len(t)):
-    T[i] = lininc(t[i])
+    T[i] = lindec(t[i])
 
 sigma = np.sqrt(DTprimspecmoments(T)[1])
 
@@ -159,14 +159,12 @@ ax.set_xlabel('energy (Mev)')
 #ax.set_yticks(np.arange(0,0.125,0.025))
 ax.azim =+80
 fig.colorbar(surf, shrink=0.5, aspect=15)
-plt.title("Linearly Increasing Temperature")
+#plt.title("Linearly Increasing Temperature")
 
 plt.show()
 
 #%%
-'''
-This section is for finding normalisation factors
-'''
+''' This section is for finding normalisation factors '''
 #Creating a lambda function for lininc
 def g(x):
     return np.sqrt(DTprimspecmoments(lininc(x))[1])*np.exp(-(x-t_0)**2/(2*t_std**2))*np.sqrt(2*np.pi)
@@ -328,7 +326,7 @@ cbar.set_label('Energies (MeV)', fontsize = 70, rotation=270)
 #fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc.png', dpi=100)    
 
 #%%
-detector = 1.6
+detector = 0.5
 time_arrive = []
     
 for i in range(len(number_of_particles)):
@@ -337,7 +335,7 @@ for i in range(len(number_of_particles)):
     
 #Plotting the number of particles arriving at each time
 scatter = plt.scatter(time_arrive,number_of_particles/max(number_of_particles),
-                      s = 20, c = energies, cmap = cm.plasma)
+                       c = energies, cmap = cm.plasma)
 
 #change size of markers!!
 
@@ -348,6 +346,7 @@ plt.ylabel('Normalised Flux')
 #fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc2.6.png', dpi=100)    
 
 #%%
+''' plotting skewness wrt detector positions'''
 skews=[]
 detectors=np.linspace(0,30,40)
 
@@ -366,12 +365,10 @@ for detector in detectors:
     
     print(skew(skewness))
     skews.append(skew(skewness))
-#%%
+
 plt.plot(detectors,skews)
 plt.xlabel('detector placement (m)')
 plt.ylabel('Skewness')
 plt.grid()
-plt.title('Linearly Increasing (4.3 to 20 keV)')
-#%%
-
-
+plt.title('Linearly Decreasing (30 to 1 keV)')
+plt.ylim(ymin = -0.4, ymax = 0.2)
