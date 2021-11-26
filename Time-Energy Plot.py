@@ -56,43 +56,43 @@ t_std = burn_time / 2.35482 #converting FWHM to sigma
 
 
 #linearly increasing temperature from 4.3keV to 15keV over burn time = 100ps
-def lininc(t):    
+def lininc(t, Tmin = 4.3, Tmax = 15):    
     
     #temperatures constant outside burn
     if t < (t_0 - burn_time/2):
-        return 4.3
+        return Tmin
     
     elif t > (t_0 + burn_time/2):
-        return 15
+        return Tmax
     
     else: #during burn
-        grad = (15 - 4.3) / burn_time
-        y_midpoint = (15 + 4.3) / 2
+        grad = (Tmax - Tmin) / burn_time
+        y_midpoint = (Tmax + Tmin) / 2
         c = y_midpoint - grad * t_0
         return grad * t + c #returns temperature in keV
     
     
 #linearly decreasing temperature from 10keV to 1keV over burn time = 100ps.
-def lindec(t):
+def lindec(t, Tmin = 1, Tmax = 10):
     
     #temperatures constant outside burn
     if t < (t_0 - burn_time/2):
-        return 10
+        return Tmax
     
     elif t > (t_0 + burn_time/2):
-        return 1 #to avoid dividing by zero (?)
+        return Tmin
     
     #during burn
     else:
-        grad = (1 - 10) / burn_time
-        y_midpoint = 5.5
+        grad = (Tmin - Tmax) / burn_time
+        y_midpoint = (Tmax + Tmin) / 2
         c = y_midpoint - grad * t_0
-        
         return grad * t + c #returns temperature in keV
     
+    
 #constant temperature profile 
-def const_temp(t):
-    return 10 #in keV
+def const_temp(t, T = 10):
+    return T #in keV
 
 #Define Source function S(E,t)
 def S(E, t):
@@ -164,8 +164,9 @@ plt.title("Linearly Increasing Temperature")
 plt.show()
 
 #%%
-#This section is for finding normalisation factors
-
+'''
+This section is for finding normalisation factors
+'''
 #Creating a lambda function for lininc
 def g(x):
     return np.sqrt(DTprimspecmoments(lininc(x))[1])*np.exp(-(x-t_0)**2/(2*t_std**2))*np.sqrt(2*np.pi)
@@ -306,12 +307,13 @@ for detector in detector_placements:
     time_arrive = []
     
     for i in range(len(number_of_particles)):
-        time_arrive.append(time_emitted[i]+detector/velocities[i]*1e12)
-    
+        time_arrive.append(time_emitted[i] + detector 
+                           / velocities[i] * 1e12) #in ps
     
     #Plotting the number of particles arriving at each time
     scatter = ax[np.int(detector*10)].scatter(time_arrive,number_of_particles, 
                                               c = energies, cmap = cm.plasma)
+
     #fig.colorbar(scatter, shrink=1, aspect=15)
     ax[np.int(detector*10)].set_title('detector at ' + np.str(np.around(detector,1))+ 'm',
                                       fontsize = 30)
@@ -323,7 +325,6 @@ cbar_ax.tick_params(labelsize=30)
 
 cbar = fig.colorbar(scatter, aspect=100, cax=cbar_ax)
 cbar.set_label('Energies (MeV)', fontsize = 70, rotation=270)
-
 #fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc.png', dpi=100)    
 
 #%%
@@ -335,9 +336,12 @@ for i in range(len(number_of_particles)):
     
     
 #Plotting the number of particles arriving at each time
+scatter = plt.scatter(time_arrive,number_of_particles/max(number_of_particles),
+                      s = 20, c = energies, cmap = cm.plasma)
 
-scatter = plt.scatter(time_arrive,number_of_particles/max(number_of_particles), c = energies, cmap = cm.plasma)
-fig.colorbar(scatter, shrink=1, aspect=15, label = 'Energies (MeV)')
+#change size of markers!!
+
+plt.colorbar(scatter, shrink=1, aspect=15, label = 'Energies (MeV)')
 plt.title('detector at ' + np.str(np.around(detector,1))+ 'm', fontsize = 10)
 plt.xlabel('Time of Arrival (ps)')
 plt.ylabel('Normalised Flux')
