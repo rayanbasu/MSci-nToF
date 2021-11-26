@@ -73,7 +73,7 @@ def lininc(t, Tmin = 4.3, Tmax = 50):
     
     
 #linearly decreasing temperature from 10keV to 1keV over burn time = 100ps.
-def lindec(t, Tmin = 1, Tmax = 40):
+def lindec(t, Tmin = 1, Tmax = 35):
     
     #temperatures constant outside burn
     if t < (t_0 - burn_time/2):
@@ -91,7 +91,7 @@ def lindec(t, Tmin = 1, Tmax = 40):
     
     
 #constant temperature profile 
-def const_temp(t, T = 10):
+def const_temp(t, T = 20):
     return T #in keV
 
 #Define Source function S(E,t)
@@ -370,5 +370,6 @@ plt.plot(detectors,skews)
 plt.xlabel('detector placement (m)')
 plt.ylabel('Skewness')
 plt.grid()
-plt.title('Linearly Decreasing (30 to 1 keV)')
-plt.ylim(ymin = -0.4, ymax = 0.2)
+#plt.title('Constant Temperature (20 keV)')
+plt.title('Linearly Decreasing (35 to 1 keV)')
+#plt.ylim(ymin = -0.4, ymax = 0.2)
