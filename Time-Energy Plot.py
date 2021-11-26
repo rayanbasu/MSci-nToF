@@ -114,26 +114,13 @@ def S(E, t):
 
 #%%
 '''
-Validating temperature profiles and seeing how std varies with profile
-'''
-t = np.linspace(0,1000,1000)
-T = np.zeros(len(t))
-for i in range(len(t)):
-    T[i] = lindec(t[i])
-
-sigma = np.sqrt(DTprimspecmoments(T)[1])
-
-plt.plot(t, T)    
-plt.plot(t, sigma)
-
-
-#%%
-'''
 Plot 3 different cases, lin increasing, decreasing, and constant - see differences 
 need to wrap this all in a function !!
 '''
+
+
 #make a grid
-n_energy, n_time = (100, 100) #number of grid points
+n_energy, n_time = (200, 200) #number of grid points
 energies = np.linspace(13, 15, n_energy) #in MeV
 times = np.linspace(100, 300, n_time) #t=100 to t=300
 
@@ -162,40 +149,6 @@ fig.colorbar(surf, shrink=0.5, aspect=15)
 plt.title("Linearly Increasing Temperature")
 
 plt.show()
-
-#%%
-'''
-This section is for finding normalisation factors
-'''
-#Creating a lambda function for lininc
-def g(x):
-    return np.sqrt(DTprimspecmoments(lininc(x))[1])*np.exp(-(x-t_0)**2/(2*t_std**2))*np.sqrt(2*np.pi)
-
-
-lininc_lambda= lambda x:g(x)
-
-#Creating a lambda function for lindec
-def h(x):
-    return np.sqrt(DTprimspecmoments(lindec(x))[1])*np.exp(-(x-t_0)**2/(2*t_std**2))*np.sqrt(2*np.pi)
-lindec_lambda= lambda x:h(x)
-
-
-#Integrating both functions
-
-#First integrating lininc
-#i and j are the value and the error of the integral
-i , j = sp.integrate.quad(lininc_lambda, 0, np.inf)
-
-#This is A
-print(1/i, j)
-
-
-#Now integrating lindec
-k , l = sp.integrate.quad(lindec_lambda, 0, np.inf)
-
-#This is A
-print(1/k, l)
-
 
 #%%
 '''
@@ -326,6 +279,54 @@ cbar_ax.tick_params(labelsize=30)
 cbar = fig.colorbar(scatter, aspect=100, cax=cbar_ax)
 cbar.set_label('Energies (MeV)', fontsize = 70, rotation=270)
 #fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc.png', dpi=100)    
+
+
+#%%
+'''
+Validating temperature profiles and seeing how std varies with profile
+'''
+t = np.linspace(0,1000,1000)
+T = np.zeros(len(t))
+for i in range(len(t)):
+    T[i] = lindec(t[i])
+
+sigma = np.sqrt(DTprimspecmoments(T)[1])
+
+plt.plot(t, T)    
+plt.plot(t, sigma)
+
+#%%
+'''
+This section is for finding normalisation factors
+'''
+#Creating a lambda function for lininc
+def g(x):
+    return np.sqrt(DTprimspecmoments(lininc(x))[1])*np.exp(-(x-t_0)**2/(2*t_std**2))*np.sqrt(2*np.pi)
+
+
+lininc_lambda= lambda x:g(x)
+
+#Creating a lambda function for lindec
+def h(x):
+    return np.sqrt(DTprimspecmoments(lindec(x))[1])*np.exp(-(x-t_0)**2/(2*t_std**2))*np.sqrt(2*np.pi)
+lindec_lambda= lambda x:h(x)
+
+
+#Integrating both functions
+
+#First integrating lininc
+#i and j are the value and the error of the integral
+i , j = sp.integrate.quad(lininc_lambda, 0, np.inf)
+
+#This is A
+print(1/i, j)
+
+
+#Now integrating lindec
+k , l = sp.integrate.quad(lindec_lambda, 0, np.inf)
+
+#This is A
+print(1/k, l)
 
 #%%
 detector = 2.6
