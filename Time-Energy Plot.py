@@ -56,7 +56,7 @@ t_std = burn_time / 2.35482 #converting FWHM to sigma
 
 
 #linearly increasing temperature from 4.3keV to 15keV over burn time = 100ps
-def lininc(t, Tmin = 4.3, Tmax = 15):    
+def lininc(t, Tmin = 4.3, Tmax = 20):    
     
     #temperatures constant outside burn
     if t < (t_0 - burn_time/2):
@@ -101,7 +101,7 @@ def S(E, t):
     norm = 0.021249110488318672
     
     #make the temperature profile modifiable in function argument!!
-    E_0, E_var = DTprimspecmoments(lindec(t)) #chosen lininc() for now
+    E_0, E_var = DTprimspecmoments(lininc(t)) #chosen lininc() for now
     E_std = np.sqrt(E_var)
     
     #gaussian in energy (taken in units of MeV)
@@ -119,7 +119,7 @@ Validating temperature profiles and seeing how std varies with profile
 t = np.linspace(0,1000,1000)
 T = np.zeros(len(t))
 for i in range(len(t)):
-    T[i] = lindec(t[i])
+    T[i] = lininc(t[i])
 
 sigma = np.sqrt(DTprimspecmoments(T)[1])
 
@@ -202,7 +202,7 @@ print(1/k, l)
 This is multiplied by the pdf distribution to give the number of particles for
 each time and energy
 '''
-particles_num = 1000
+particles_num = 2000
 
 
 #Empty arrays to record data:
@@ -328,7 +328,7 @@ cbar.set_label('Energies (MeV)', fontsize = 70, rotation=270)
 #fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc.png', dpi=100)    
 
 #%%
-detector = 2.6
+detector = 1.6
 time_arrive = []
     
 for i in range(len(number_of_particles)):
@@ -349,7 +349,7 @@ plt.ylabel('Normalised Flux')
 
 #%%
 skews=[]
-detectors=np.linspace(0,10,21)
+detectors=np.linspace(0,30,40)
 
 for detector in detectors:
     time_arrive = []
@@ -366,13 +366,12 @@ for detector in detectors:
     
     print(skew(skewness))
     skews.append(skew(skewness))
-
-
+#%%
 plt.plot(detectors,skews)
 plt.xlabel('detector placement (m)')
 plt.ylabel('Skewness')
 plt.grid()
-plt.title('Linearly Decreasing')
-
+plt.title('Linearly Increasing (4.3 to 20 keV)')
+#%%
 
 
