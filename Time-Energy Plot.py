@@ -101,7 +101,7 @@ def S(E, t):
     norm = 0.021249110488318672
     
     #make the temperature profile modifiable in function argument!!
-    E_0, E_var = DTprimspecmoments(lindec(t)) #chosen lininc() for now
+    E_0, E_var = DTprimspecmoments(const_temp(t)) #chosen lininc() for now
     E_std = np.sqrt(E_var)
     
     #gaussian in energy (taken in units of MeV)
