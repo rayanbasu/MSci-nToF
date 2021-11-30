@@ -101,7 +101,7 @@ def S(E, t):
     norm = 0.021249110488318672
     
     #make the temperature profile modifiable in function argument!!
-    E_0, E_var = DTprimspecmoments(const_temp(t)) #chosen lininc() for now
+    E_0, E_var = DTprimspecmoments(lindec(t)) #chosen lininc() for now
     E_std = np.sqrt(E_var)
     
     #gaussian in energy (taken in units of MeV)
@@ -326,7 +326,7 @@ cbar.set_label('Energies (MeV)', fontsize = 70, rotation=270)
 #fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc.png', dpi=100)    
 
 #%%
-detector = 0.5
+detector = 0
 time_arrive = []
     
 for i in range(len(number_of_particles)):
@@ -344,11 +344,10 @@ plt.title('detector at ' + np.str(np.around(detector,1))+ 'm', fontsize = 10)
 plt.xlabel('Time of Arrival (ps)')
 plt.ylabel('Normalised Flux')
 #fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc2.6.png', dpi=100)    
-
 #%%
 ''' plotting skewness wrt detector positions'''
 skews=[]
-detectors=np.linspace(0,30,40)
+detectors=np.linspace(0,5,50)
 
 for detector in detectors:
     time_arrive = []
@@ -365,11 +364,11 @@ for detector in detectors:
     
     print(skew(skewness))
     skews.append(skew(skewness))
-
-plt.plot(detectors,skews)
+#%%
+plt.plot(detectors,skews, 'x')
 plt.xlabel('detector placement (m)')
 plt.ylabel('Skewness')
 plt.grid()
 #plt.title('Constant Temperature (20 keV)')
 plt.title('Linearly Decreasing (35 to 1 keV)')
-#plt.ylim(ymin = -0.4, ymax = 0.2)
+plt.xlim(xmax = 2)
