@@ -73,7 +73,7 @@ def lininc(t, Tmin = 4.3, Tmax = 50):
     
     
 #linearly decreasing temperature from 10keV to 1keV over burn time = 100ps.
-def lindec(t, Tmin = 1, Tmax = 35):
+def lindec(t, Tmin = 8, Tmax = 10):
     
     #temperatures constant outside burn
     if t < (t_0 - burn_time/2):
@@ -89,6 +89,28 @@ def lindec(t, Tmin = 1, Tmax = 35):
         c = y_midpoint - grad * t_0
         return grad * t + c #returns temperature in keV
     
+#linearly increasing then decreasing temperature over burn time = 100ps.
+def incdec(t, Tmin_1 = 10, Tmax = 1, Tmin_2 = 8):
+    
+    #temperatures constant outside burn
+    if t < (t_0 - burn_time/2):
+        return Tmin_1
+    
+    elif t > (t_0 + burn_time/2):
+        return Tmin_2
+    
+    #linear increase of temperature at start of burn
+    elif t > (t_0 - burn_time/2) and t < t_0:
+        grad = (Tmax - Tmin_1) / (burn_time/2)
+        c = Tmax - grad * t_0
+        return grad * t + c #returns temperature in keV
+    
+    #linear decrease of temperature in second half of burn
+    elif t < (t_0 + burn_time/2) and t > t_0:
+        grad = (Tmin_2 - Tmax) / (burn_time/2)
+        c = Tmax - grad * t_0
+        return grad * t + c #returns temperature in keV
+
     
 #constant temperature profile 
 def const_temp(t, T = 20):
@@ -101,7 +123,7 @@ def S(E, t):
     norm = 0.021249110488318672
     
     #make the temperature profile modifiable in function argument!!
-    E_0, E_var = DTprimspecmoments(lindec(t)) #chosen lininc() for now
+    E_0, E_var = DTprimspecmoments(incdec(t)) #chosen lininc() for now
     E_std = np.sqrt(E_var)
     
     #gaussian in energy (taken in units of MeV)
@@ -119,12 +141,15 @@ Validating temperature profiles and seeing how std varies with profile
 t = np.linspace(0,1000,1000)
 T = np.zeros(len(t))
 for i in range(len(t)):
-    T[i] = lindec(t[i])
+    T[i] = incdec(t[i])
 
 sigma = np.sqrt(DTprimspecmoments(T)[1])
 
 plt.plot(t, T)    
-plt.plot(t, sigma)
+#plt.plot(t, sigma)
+plt.title('Temperature against Time')
+plt.xlabel('Time (ps)')
+plt.ylabel('Temperature (keV)')
 
 
 #%%
@@ -364,11 +389,11 @@ for detector in detectors:
     
     print(skew(skewness))
     skews.append(skew(skewness))
-#%%
+
 plt.plot(detectors,skews, 'x')
 plt.xlabel('detector placement (m)')
 plt.ylabel('Skewness')
 plt.grid()
 #plt.title('Constant Temperature (20 keV)')
-plt.title('Linearly Decreasing (35 to 1 keV)')
+#plt.title('Linearly Decreasing (35 to 1 keV)')
 plt.xlim(xmax = 2)
