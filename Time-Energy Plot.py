@@ -158,7 +158,7 @@ Plot 3 different cases, lin increasing, decreasing, and constant - see differenc
 need to wrap this all in a function !!
 '''
 #make a grid
-n_energy, n_time = (100, 100) #number of grid points
+n_energy, n_time = (200, 200) #number of grid points
 energies = np.linspace(13, 15, n_energy) #in MeV
 times = np.linspace(100, 300, n_time) #t=100 to t=300
 
@@ -238,11 +238,12 @@ energies = [] #turn into array!!!
 particle_df = pd.DataFrame(columns = ['time emitted', 'energy', ' number of particles'])
 
 
-#Goes thorugh the 2D arrays containing each energy and time and finds the number of particles for each of those values
+#Goes thorugh the 2D arrays containing each energy and time and finds 
+#the number of particles for each of those values
 #i.e. saving the data of grid points if values > 1
 for i in range(len(Z)):
     for j in range(len(Z[0])):
-        if particles_num * Z[i][j]>1:
+        if particles_num * Z[i][j]>1: #may need to fix this issue with the cutoff point
             
             #time in picoseconds
             time_emitted = np.append(time_emitted, t_grid[i][j])
@@ -255,7 +256,7 @@ for i in range(len(Z)):
                                       / 1.67e-27))
             
             #save integer number of particles
-            num = np.round(particles_num  * Z[i][j])
+            num = np.round(particles_num  * Z[i][j]) # may have a problem here with rounding
             number_of_particles = np.append(number_of_particles, num)
             
           
@@ -354,6 +355,7 @@ cbar.set_label('Energies (MeV)', fontsize = 70, rotation=270)
 detector = 0
 time_arrive = []
     
+#times of arrivals at given detector distance
 for i in range(len(number_of_particles)):
     time_arrive.append(time_emitted[i]+detector/velocities[i]*1e12)
     
@@ -361,6 +363,16 @@ for i in range(len(number_of_particles)):
 #Plotting the number of particles arriving at each time
 scatter = plt.scatter(time_arrive,number_of_particles/max(number_of_particles),
                        c = energies, cmap = cm.plasma)
+'''
+NOTE: this is not what the actual detector sees. This code plots each discrete point
+from our source grid as coloured points wrt energies on the graph - i.e. the 'flux'
+shown is not the cumulative flux that the detector receives at the particular time, 
+but rather the discrete fluxes of each particular grid point that may have been 
+plotted on top of each other. 
+
+For an accurate representation of the what the detector sees, we need to bin this data 
+according to an appropriate resolution of arrival time and plot the cumulative flux.
+'''
 
 #change size of markers!!
 
@@ -378,11 +390,12 @@ for detector in detectors:
     time_arrive = []
         
     for i in range(len(number_of_particles)):
-        time_arrive.append(time_emitted[i]+detector/velocities[i]*1e12)
-
+        time_arrive.append(time_emitted[i] + detector 
+                           / velocities[i] * 1e12) #in ps
+        
     skewness = np.array([])
     for i in range(len(number_of_particles)):
-        particles = np.int(number_of_particles[i])
+        particles = np.int(number_of_particles[i]) #may have a problem here with rounding!!
         print(i)
         for j in range(particles):
             skewness = np.append(skewness,time_arrive[i])
