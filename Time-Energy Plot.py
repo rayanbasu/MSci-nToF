@@ -90,7 +90,7 @@ def lindec(t, Tmin = 8, Tmax = 10):
         return grad * t + c #returns temperature in keV
     
 #linearly increasing then decreasing temperature over burn time = 100ps.
-def incdec(t, Tmin_1 = 10, Tmax = 5, Tmin_2 = 8):
+def incdec(t, Tmin_1 = 10, Tmax = 1, Tmin_2 = 8):
     
     #temperatures constant outside burn
     if t < (t_0 - burn_time/2):
@@ -123,7 +123,7 @@ def S(E, t):
     norm = 0.021249110488318672
     
     #make the temperature profile modifiable in function argument!!
-    E_0, E_var = DTprimspecmoments(lindec(t)) #chosen lininc() for now
+    E_0, E_var = DTprimspecmoments(incdec(t)) #chosen lininc() for now
     E_std = np.sqrt(E_var)
     
     #gaussian in energy (taken in units of MeV)
@@ -141,7 +141,7 @@ Validating temperature profiles and seeing how std varies with profile
 t = np.linspace(0,1000,1000)
 T = np.zeros(len(t))
 for i in range(len(t)):
-    T[i] = lindec(t[i])
+    T[i] = incdec(t[i])
 
 sigma = np.sqrt(DTprimspecmoments(T)[1])
 
