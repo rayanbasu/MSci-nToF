@@ -56,7 +56,7 @@ t_std = burn_time / 2.35482 #converting FWHM to sigma
 
 tmin = 10
 tmax = 35
-for tmin in [1,5,10,15, 20]:
+for tmin in [1,5,10,15,20]:
     print(tmin)
     #linearly increasing temperature from 4.3keV to 15keV over burn time = 100ps
     def lininc(t, Tmin = tmin, Tmax = tmax):    
@@ -207,6 +207,7 @@ for tmin in [1,5,10,15, 20]:
     plt.grid()
     #plt.title('Constant Temperature (20 keV)')
     plt.title(f'Linearly Increasing ({tmin} to {tmax} keV)')
+    plt.ylim(ymax = 0.5, ymin = 0)
     plt.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc_{}_{}.png'.format(tmax, tmin), dpi=100)    
 
-    #plt.xlim(xmax = 2)
+    
