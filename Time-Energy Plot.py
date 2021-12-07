@@ -401,6 +401,7 @@ for detector in detectors:
             skewness = np.append(skewness,time_arrive[i])
     
     print(skew(skewness))
+    #think about use of bias here, does it change much in our results?
     skews.append(skew(skewness))
 
 plt.plot(detectors,skews, 'x')
