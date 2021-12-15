@@ -111,7 +111,7 @@ for i in range(0, 5000): #from t = 0 to t = 5000 ps
 
 detectors = np.asarray([detector1_list, detector2_list, detector3_list, detector4_list])
 
-#%%
+
 #plotting 3d temporal and distance spread
 
 

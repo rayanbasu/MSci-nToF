@@ -56,7 +56,7 @@ t_std = burn_time / 2.35482 #converting FWHM to sigma
 
 
 #linearly increasing temperature from 4.3keV to 15keV over burn time = 100ps
-def lininc(t, Tmin = 4.3, Tmax = 50):    
+def lininc(t, Tmin = 4.3, Tmax = 15):    
     
     #temperatures constant outside burn
     if t < (t_0 - burn_time/2):
@@ -73,7 +73,7 @@ def lininc(t, Tmin = 4.3, Tmax = 50):
     
     
 #linearly decreasing temperature from 10keV to 1keV over burn time = 100ps.
-def lindec(t, Tmin = 8, Tmax = 10):
+def lindec(t, Tmin = 1, Tmax = 10):
     
     #temperatures constant outside burn
     if t < (t_0 - burn_time/2):
@@ -90,7 +90,7 @@ def lindec(t, Tmin = 8, Tmax = 10):
         return grad * t + c #returns temperature in keV
     
 #linearly increasing then decreasing temperature over burn time = 100ps.
-def incdec(t, Tmin_1 = 10, Tmax = 1, Tmin_2 = 8):
+def incdec(t, Tmin_1 = 10, Tmax = 1, Tmin_2 = 10):
     
     #temperatures constant outside burn
     if t < (t_0 - burn_time/2):
@@ -158,7 +158,7 @@ Plot 3 different cases, lin increasing, decreasing, and constant - see differenc
 need to wrap this all in a function !!
 '''
 #make a grid
-n_energy, n_time = (200, 200) #number of grid points
+n_energy, n_time = (100, 100) #number of grid points
 energies = np.linspace(13, 15, n_energy) #in MeV
 times = np.linspace(100, 300, n_time) #t=100 to t=300
 
@@ -182,7 +182,7 @@ ax.set_ylabel('time (ps)')
 ax.set_xlabel('energy (Mev)')
 #ax.set_zlabel('pdf')
 #ax.set_yticks(np.arange(0,0.125,0.025))
-ax.azim =+80
+ax.azim =80
 fig.colorbar(surf, shrink=0.5, aspect=15)
 #plt.title("Linearly Increasing Temperature")
 
@@ -225,7 +225,7 @@ print(1/k, l)
 This is multiplied by the pdf distribution to give the number of particles for
 each time and energy
 '''
-particles_num = 2000
+particles_num = 20000
 
 
 #Empty arrays to record data:
@@ -403,6 +403,7 @@ for detector in detectors:
     print(skew(skewness))
     #think about use of bias here, does it change much in our results?
     skews.append(skew(skewness))
+
 
 plt.plot(detectors,skews, 'x')
 plt.xlabel('detector placement (m)')
