@@ -9,9 +9,12 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from scipy.stats import skew
+from scipy.stats import kurtosis
 import pandas as pd
 from matplotlib.collections import PolyCollection
 from matplotlib import colors as mcolors
+
+
 
 # Returns the mean energy and variance based on Ballabio (Code from Aiden)
 # Tion in keV
@@ -54,10 +57,10 @@ t_0 = 200 #bang time (in picoseconds)
 burn_time = 100 #choose burn time of 100ps, take this to be equal to FWHM for now 
 t_std = burn_time / 2.35482 #converting FWHM to sigma
 
-tmin = 10
-tmax = 35
-for tmin in [1,5,10,15,20]:
-    print(tmin)
+tmin_1 = 10
+tmin_2 = 10
+for temp in [15,20,25,30]:
+    print(tmin_1)
     #linearly increasing temperature from 4.3keV to 15keV over burn time = 100ps
     def lininc(t, Tmin = tmin, Tmax = tmax):    
         
@@ -92,9 +95,28 @@ for tmin in [1,5,10,15,20]:
             c = y_midpoint - grad * t_0
             return grad * t + c #returns temperature in keV
         
+    def incdec(t, Tmin_1 = tmin_1, Tmax = tmax_1, Tmin_2 = tmin_2):
         
+        #temperatures constant outside burn
+        if t < (t_0 - burn_time/2):
+            return Tmin_1
+        
+        elif t > (t_0 + burn_time/2):
+            return Tmin_2
+        
+        #linear increase of temperature at start of burn
+        elif t > (t_0 - burn_time/2) and t < t_0:
+            grad = (Tmax - Tmin_1) / (burn_time/2)
+            c = Tmax - grad * t_0
+            return grad * t + c #returns temperature in keV
+        
+        #linear decrease of temperature in second half of burn
+        elif t < (t_0 + burn_time/2) and t > t_0:
+            grad = (Tmin_2 - Tmax) / (burn_time/2)
+            c = Tmax - grad * t_0
+            return grad * t + c #returns temperature in keV    
     #constant temperature profile 
-    def const_temp(t, T = 20):
+    def const_temp(t, T = temp):
         return T #in keV
     
     #Define Source function S(E,t)
@@ -104,7 +126,7 @@ for tmin in [1,5,10,15,20]:
         norm = 0.021249110488318672
         
         #make the temperature profile modifiable in function argument!!
-        E_0, E_var = DTprimspecmoments(lininc(t)) #chosen lininc() for now
+        E_0, E_var = DTprimspecmoments(const_temp(t)) #chosen lininc() for now
         E_std = np.sqrt(E_var)
         
         #gaussian in energy (taken in units of MeV)
@@ -172,7 +194,8 @@ for tmin in [1,5,10,15,20]:
     
     
     skews=[]
-    detectors=np.linspace(0.2,0.4,10)
+    kurts=[]
+    detectors=np.linspace(0,1,10)
     
     for detector in detectors:
         time_arrive = []
@@ -182,7 +205,7 @@ for tmin in [1,5,10,15,20]:
     
         skewness = np.array([])
         for i in range(len(number_of_particles)):
-            particles = np.int(number_of_particles[i])
+            particles = int(number_of_particles[i])
             #print(i)
             for j in range(particles):
                 skewness = np.append(skewness,time_arrive[i])
@@ -199,15 +222,16 @@ for tmin in [1,5,10,15,20]:
         
         
         skews.append(skew(skewness))
-        
+        kurts.append(kurtosis(skewness))
     plt.figure()
     plt.plot(detectors,skews, 'x')
+    plt.plot(detectors, kurts, 'x')
     plt.xlabel('detector placement (m)')
     plt.ylabel('Skewness')
     plt.grid()
     #plt.title('Constant Temperature (20 keV)')
-    plt.title(f'Linearly Increasing ({tmin} to {tmax} keV)')
-    plt.ylim(ymax = 0.5, ymin = 0)
+    plt.title(f'Constant Temperature ({temp} keV)')
+    #plt.ylim(ymax = 0.5, ymin = 0)
     plt.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc_{}_{}.png'.format(tmax, tmin), dpi=100)    
 
     
