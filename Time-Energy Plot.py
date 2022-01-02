@@ -90,7 +90,7 @@ def lindec(t, Tmin = 1, Tmax = 10):
         return grad * t + c #returns temperature in keV
     
 #linearly increasing then decreasing temperature over burn time = 100ps.
-def incdec(t, Tmin_1 = 10, Tmax = 1, Tmin_2 = 10):
+def incdec(t, Tmin_1 = 2, Tmax = 15, Tmin_2 = 2):
     
     #temperatures constant outside burn
     if t < (t_0 - burn_time/2):
@@ -111,23 +111,22 @@ def incdec(t, Tmin_1 = 10, Tmax = 1, Tmin_2 = 10):
         c = Tmax - grad * t_0
         return grad * t + c #returns temperature in keV
 
-    
 #constant temperature profile 
-def const_temp(t, T = 20):
+def const_temp(t, T = 15):
     return T #in keV
 
-#Define Source function S(E,t)
-def S(E, t):
+#Define Source function S(E,t) 
+#Need to also define the temperature profile being used!! (see line 171)
+def S(E, t, T_prof):
     
     #normalisation constant (still need to calculate this!! use this for now)
     norm = 0.021249110488318672
-    
-    #make the temperature profile modifiable in function argument!!
-    E_0, E_var = DTprimspecmoments(incdec(t)) #chosen lininc() for now
+
+    E_0, E_var = DTprimspecmoments(T_prof) 
     E_std = np.sqrt(E_var)
     
     #gaussian in energy (taken in units of MeV)
-    energy_gauss  = np.exp(-(E - E_0)**2 / (2 * E_std**2))
+    energy_gauss = np.exp(-(E - E_0)**2 / (2 * E_std**2))
     
     #gaussian in time
     time_gauss = np.exp(-(t - t_0)**2 / (2 * t_std**2))
@@ -158,7 +157,7 @@ Plot 3 different cases, lin increasing, decreasing, and constant - see differenc
 need to wrap this all in a function !!
 '''
 #make a grid
-n_energy, n_time = (100, 100) #number of grid points
+n_energy, n_time = (200, 200) #number of grid points
 energies = np.linspace(13, 15, n_energy) #in MeV
 times = np.linspace(100, 300, n_time) #t=100 to t=300
 
@@ -169,8 +168,9 @@ Z = np.zeros([n_time, n_energy])
 #creating data
 for i in range(len(Z)):
     for j in range(len(Z[0])):
-        Z[i][j] = S(E_grid[i][j], t_grid[i][j])
-        
+        Z[i][j] = S(E_grid[i][j], t_grid[i][j],
+                    T_prof = lininc(t_grid[i][j], Tmin = 4, Tmax = 15))
+                    #T_prof = const_temp(t_grid[i][j]))#, Tmin_1 = 2, Tmax = 15, Tmin_2 = 2))
         
 #plot surface
 fig = plt.figure()
@@ -225,7 +225,7 @@ print(1/k, l)
 This is multiplied by the pdf distribution to give the number of particles for
 each time and energy
 '''
-particles_num = 20000
+particles_num = 1000
 
 
 #Empty arrays to record data:
@@ -352,7 +352,7 @@ cbar.set_label('Energies (MeV)', fontsize = 70, rotation=270)
 #fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc.png', dpi=100)    
 
 #%%
-detector = 0
+detector = 4
 time_arrive = []
     
 #times of arrivals at given detector distance
@@ -384,7 +384,7 @@ plt.ylabel('Normalised Flux')
 #%%
 ''' plotting skewness wrt detector positions'''
 skews=[]
-detectors=np.linspace(0,5,50)
+detectors=np.linspace(0,3,20)
 
 for detector in detectors:
     time_arrive = []
@@ -396,7 +396,7 @@ for detector in detectors:
     skewness = np.array([])
     for i in range(len(number_of_particles)):
         particles = np.int(number_of_particles[i]) #may have a problem here with rounding!!
-        print(i)
+        print([i,detector])
         for j in range(particles):
             skewness = np.append(skewness,time_arrive[i])
     
@@ -411,4 +411,4 @@ plt.ylabel('Skewness')
 plt.grid()
 #plt.title('Constant Temperature (20 keV)')
 #plt.title('Linearly Decreasing (35 to 1 keV)')
-plt.xlim(xmax = 2)
+#plt.xlim(xmax = 2)
