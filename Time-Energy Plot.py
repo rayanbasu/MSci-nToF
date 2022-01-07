@@ -182,7 +182,8 @@ ax.set_ylabel('time (ps)')
 ax.set_xlabel('energy (Mev)')
 #ax.set_zlabel('pdf')
 #ax.set_yticks(np.arange(0,0.125,0.025))
-ax.azim =80
+ax.azim =- 80
+ax.elev = 40
 fig.colorbar(surf, shrink=0.5, aspect=15)
 #plt.title("Linearly Increasing Temperature")
 
@@ -190,6 +191,8 @@ plt.show()
 
 #%%
 ''' This section is for finding normalisation factors '''
+
+
 #Creating a lambda function for lininc
 def g(x):
     return np.sqrt(DTprimspecmoments(lininc(x))[1])*np.exp(-(x-t_0)**2/(2*t_std**2))*np.sqrt(2*np.pi)
@@ -225,7 +228,7 @@ print(1/k, l)
 This is multiplied by the pdf distribution to give the number of particles for
 each time and energy
 '''
-particles_num = 1000
+particles_num = 5000
 
 
 #Empty arrays to record data:
@@ -352,7 +355,7 @@ cbar.set_label('Energies (MeV)', fontsize = 70, rotation=270)
 #fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc.png', dpi=100)    
 
 #%%
-detector = 4
+detector = 1
 time_arrive = []
     
 #times of arrivals at given detector distance
@@ -384,7 +387,7 @@ plt.ylabel('Normalised Flux')
 #%%
 ''' plotting skewness wrt detector positions'''
 skews=[]
-detectors=np.linspace(0,3,20)
+detectors=[0] #np.linspace(0,3,20)
 
 for detector in detectors:
     time_arrive = []
