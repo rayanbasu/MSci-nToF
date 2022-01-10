@@ -149,7 +149,7 @@ def generate_source(T_prof):
     print(norm_integral)
 
     #define grid parameters
-    n_energy, n_time = (100, 100) #number of grid points
+    n_energy, n_time = (200, 200) #number of grid points
     energies = np.linspace(13, 15, n_energy) #in MeV
     times = np.linspace(100, 300, n_time) #t=100 to t=300
 
@@ -188,6 +188,15 @@ def generate_source(T_prof):
 
 '''Testing generate source: should plot source function and return the source data'''
 Z, E_grid, t_grid = generate_source(lindec)
+
+
+#%%
+#integrate the function over enegy and time (lindec) to check normalisation 
+
+integral = sp.integrate.nquad(lambda E, t: S(E, t, lininc), [[-np.inf, np.inf]
+                                                             ,[-np.inf, np.inf]])
+
+print(integral)
 
 
 #%%
@@ -369,7 +378,7 @@ plt.ylabel('Normalised Flux')
 #%%
 ''' plotting skewness wrt detector positions'''
 skews=[]
-detectors=np.linspace(0,3,20)
+detectors=[0] #np.linspace(0,3,20)
 
 for detector in detectors:
     time_arrive = []
