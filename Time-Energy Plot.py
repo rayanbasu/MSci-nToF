@@ -73,7 +73,7 @@ def lininc(t, Tmin = 4.3, Tmax = 15):
     
     
 #linearly decreasing temperature from 10keV to 1keV over burn time = 100ps.
-def lindec(t, Tmin = 1, Tmax = 10):
+def lindec(t, Tmin = 3, Tmax = 10):
     
     #temperatures constant outside burn
     if t < (t_0 - burn_time/2):
@@ -138,18 +138,15 @@ def S(E, t, T_prof):
 
 def generate_source(T_prof):
     
-    #first calculate the normalisation constant
-    #numerically calculate the integral of time part
-    def integrand(t):
-        return (np.sqrt(DTprimspecmoments(T_prof(t))[1]) 
-                * np.exp(-(t - t_0)**2 / (2*t_std**2)))
-    
-    norm_integral = sp.integrate.quad(lambda t: integrand(t), -np.inf, +np.inf)[0]
-    norm = 1 / (np.sqrt(2 * np.pi) * norm_integral)
-    print(norm_integral)
+    #first calculate the normalisation constant by numerically integrating 
+    #over energy and time    
+    norm_integral = sp.integrate.nquad(lambda E, t: S(E, t, T_prof), [[0, 100]
+                                                             ,[-np.inf, np.inf]])[0]
+    norm = 1 / (norm_integral)
+    print(norm)
 
     #define grid parameters
-    n_energy, n_time = (200, 200) #number of grid points
+    n_energy, n_time = (200, 100) #number of grid points
     energies = np.linspace(13, 15, n_energy) #in MeV
     times = np.linspace(100, 300, n_time) #t=100 to t=300
 
@@ -157,11 +154,10 @@ def generate_source(T_prof):
     E_grid, t_grid = np.meshgrid(energies, times) 
     Z = np.zeros([n_time, n_energy])
 
-    #creating data
+    #creating data, Z are the values of the pdf
     for i in range(len(Z)):
         for j in range(len(Z[0])):
-            Z[i][j] = S(E_grid[i][j], t_grid[i][j], T_prof)
-                        #T_prof = const_temp(t_grid[i][j]))#, Tmin_1 = 2, Tmax = 15, Tmin_2 = 2))
+            Z[i][j] = S(E_grid[i][j], t_grid[i][j], T_prof)           
     
     #normalise the source
     Z = norm * Z
@@ -187,13 +183,13 @@ def generate_source(T_prof):
 #%%
 
 '''Testing generate source: should plot source function and return the source data'''
-Z, E_grid, t_grid = generate_source(lindec)
+Z, E_grid, t_grid = generate_source(lininc)
 
 
 #%%
 #integrate the function over enegy and time (lindec) to check normalisation 
 
-integral = sp.integrate.nquad(lambda E, t: S(E, t, lininc), [[-np.inf, np.inf]
+integral = sp.integrate.nquad(lambda E, t: S(E, t, lininc), [[0, 100]
                                                              ,[-np.inf, np.inf]])
 
 print(integral)
