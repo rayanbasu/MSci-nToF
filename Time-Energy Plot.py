@@ -48,9 +48,8 @@ def DTprimspecmoments(Tion):
 
 '''
 Define the different temperature profiles centered around bang time:
-(need to figure out what to set temperature outside burn time range)
 '''
-t_0 = 200 #bang time (in picoseconds)
+t_0 = 210 #bang time (in picoseconds)
 burn_time = 100 #choose burn time of 100ps, take this to be equal to FWHM for now 
 t_std = burn_time / 2.35482 #converting FWHM to sigma
 
@@ -73,7 +72,7 @@ def lininc(t, Tmin = 4.3, Tmax = 15):
     
     
 #linearly decreasing temperature from 10keV to 1keV over burn time = 100ps.
-def lindec(t, Tmin = 1, Tmax = 10):
+def lindec(t, Tmin = 3, Tmax = 10):
     
     #temperatures constant outside burn
     if t < (t_0 - burn_time/2):
@@ -88,6 +87,7 @@ def lindec(t, Tmin = 1, Tmax = 10):
         y_midpoint = (Tmax + Tmin) / 2
         c = y_midpoint - grad * t_0
         return grad * t + c #returns temperature in keV
+    
     
 #linearly increasing then decreasing temperature over burn time = 100ps.
 def incdec(t, Tmin_1 = 2, Tmax = 15, Tmin_2 = 2):
@@ -110,19 +110,20 @@ def incdec(t, Tmin_1 = 2, Tmax = 15, Tmin_2 = 2):
         grad = (Tmin_2 - Tmax) / (burn_time/2)
         c = Tmax - grad * t_0
         return grad * t + c #returns temperature in keV
+    
 
 #constant temperature profile 
 def const_temp(t, T = 15):
     return T #in keV
 
-#Define Source function S(E,t) 
-#Need to also define the temperature profile being used!! (see line 171)
+
+''' Defining UN-NORMALISED Source function S(E,t):
+Need to also define the temperature profile being used!! (T_prof argument)
+Source is normalised in the generate_source() function
+'''
 def S(E, t, T_prof):
     
-    #normalisation constant (still need to calculate this!! use this for now)
-    norm = 0.021249110488318672
-
-    E_0, E_var = DTprimspecmoments(T_prof) 
+    E_0, E_var = DTprimspecmoments(T_prof(t)) 
     E_std = np.sqrt(E_var)
     
     #gaussian in energy (taken in units of MeV)
@@ -131,12 +132,63 @@ def S(E, t, T_prof):
     #gaussian in time
     time_gauss = np.exp(-(t - t_0)**2 / (2 * t_std**2))
     
-    return norm * energy_gauss * time_gauss
+    return energy_gauss * time_gauss
+
+
+def generate_source(T_prof):
+    
+    #first calculate the normalisation constant by numerically integrating 
+    #over energy and time: (0,100) range for Energy and (0, 500) for time  
+    #assumed to be approximately the entire function 
+    
+    norm_integral = sp.integrate.nquad(lambda E, t: S(E, t, T_prof), [[0, 100]
+                                                             ,[0, 500]])[0]
+    norm = 1 / (norm_integral)
+    print(norm)
+
+    #define grid parameters
+    n_energy, n_time = (150, 150) #number of grid points
+    energies = np.linspace(13, 15, n_energy) #in MeV
+    times = np.linspace(100, 300, n_time) #t=100 to t=300
+
+    #generate grid
+    E_grid, t_grid = np.meshgrid(energies, times) 
+    Z = np.zeros([n_time, n_energy])
+
+    #creating data, Z are the values of the pdf
+    for i in range(len(Z)):
+        for j in range(len(Z[0])):
+            Z[i][j] = S(E_grid[i][j], t_grid[i][j], T_prof)           
+    
+    #normalise the source
+    Z = norm * Z
+    
+    #plot surface
+    fig = plt.figure()
+    ax = Axes3D(fig)
+    surf = ax.plot_surface(E_grid, t_grid, Z, cmap=cm.coolwarm)
+
+    #customise plot
+    ax.set_ylabel('time (ps)')
+    ax.set_xlabel('energy (Mev)')
+    #ax.set_zlabel('pdf')
+    #ax.set_yticks(np.arange(0,0.125,0.025))
+    ax.azim =- 80
+    ax.elev = 40
+    fig.colorbar(surf, shrink=0.5, aspect=15)
+    #plt.title("Linearly Increasing Temperature")
+
+    plt.show()
+    return Z, E_grid, t_grid
 
 #%%
-'''
-Validating temperature profiles and seeing how std varies with profile
-'''
+'''Testing generate_source() function: 
+   this should plot the source function and return the source data'''
+Z, E_grid, t_grid = generate_source(lininc)
+
+
+#%%
+''' Validating temperature profiles and seeing how std varies with profile '''
 t = np.linspace(0,1000,1000)
 T = np.zeros(len(t))
 for i in range(len(t)):
@@ -149,79 +201,6 @@ plt.plot(t, T)
 plt.title('Temperature against Time')
 plt.xlabel('Time (ps)')
 plt.ylabel('Temperature (keV)')
-
-
-#%%
-'''
-Plot 3 different cases, lin increasing, decreasing, and constant - see differences 
-need to wrap this all in a function !!
-'''
-#make a grid
-n_energy, n_time = (200, 200) #number of grid points
-energies = np.linspace(13, 15, n_energy) #in MeV
-times = np.linspace(100, 300, n_time) #t=100 to t=300
-
-#create grid
-E_grid, t_grid = np.meshgrid(energies, times) 
-Z = np.zeros([n_time, n_energy])
-
-#creating data
-for i in range(len(Z)):
-    for j in range(len(Z[0])):
-        Z[i][j] = S(E_grid[i][j], t_grid[i][j],
-                    T_prof = lininc(t_grid[i][j], Tmin = 4, Tmax = 15))
-                    #T_prof = const_temp(t_grid[i][j]))#, Tmin_1 = 2, Tmax = 15, Tmin_2 = 2))
-        
-#plot surface
-fig = plt.figure()
-ax = Axes3D(fig)
-surf = ax.plot_surface(E_grid, t_grid, Z, cmap=cm.coolwarm)
-
-#customise plot
-ax.set_ylabel('time (ps)')
-ax.set_xlabel('energy (Mev)')
-#ax.set_zlabel('pdf')
-#ax.set_yticks(np.arange(0,0.125,0.025))
-ax.azim =- 80
-ax.elev = 40
-fig.colorbar(surf, shrink=0.5, aspect=15)
-#plt.title("Linearly Increasing Temperature")
-
-plt.show()
-
-#%%
-''' This section is for finding normalisation factors '''
-
-
-#Creating a lambda function for lininc
-def g(x):
-    return np.sqrt(DTprimspecmoments(lininc(x))[1])*np.exp(-(x-t_0)**2/(2*t_std**2))*np.sqrt(2*np.pi)
-
-
-lininc_lambda= lambda x:g(x)
-
-#Creating a lambda function for lindec
-def h(x):
-    return np.sqrt(DTprimspecmoments(lindec(x))[1])*np.exp(-(x-t_0)**2/(2*t_std**2))*np.sqrt(2*np.pi)
-lindec_lambda= lambda x:h(x)
-
-
-#Integrating both functions
-
-#First integrating lininc
-#i and j are the value and the error of the integral
-i , j = sp.integrate.quad(lininc_lambda, 0, np.inf)
-
-#This is A
-print(1/i, j)
-
-
-#Now integrating lindec
-k , l = sp.integrate.quad(lindec_lambda, 0, np.inf)
-
-#This is A
-print(1/k, l)
-
 
 #%%
 '''
@@ -243,10 +222,10 @@ particle_df = pd.DataFrame(columns = ['time emitted', 'energy', ' number of part
 
 #Goes thorugh the 2D arrays containing each energy and time and finds 
 #the number of particles for each of those values
-#i.e. saving the data of grid points if values > 1
+#i.e. only propagate grid points with values >= 1/1000th of max pdf value
 for i in range(len(Z)):
     for j in range(len(Z[0])):
-        if particles_num * Z[i][j]>1: #may need to fix this issue with the cutoff point
+        if Z[i][j] >= np.max(Z)/1000:
             
             #time in picoseconds
             time_emitted = np.append(time_emitted, t_grid[i][j])
@@ -355,7 +334,7 @@ cbar.set_label('Energies (MeV)', fontsize = 70, rotation=270)
 #fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc.png', dpi=100)    
 
 #%%
-detector = 1
+detector = 0
 time_arrive = []
     
 #times of arrivals at given detector distance
@@ -366,8 +345,8 @@ for i in range(len(number_of_particles)):
 #Plotting the number of particles arriving at each time
 scatter = plt.scatter(time_arrive,number_of_particles/max(number_of_particles),
                        c = energies, cmap = cm.plasma)
-'''
-NOTE: this is not what the actual detector sees. This code plots each discrete point
+
+''' NOTE: this is not what the actual detector sees. This code plots each discrete point
 from our source grid as coloured points wrt energies on the graph - i.e. the 'flux'
 shown is not the cumulative flux that the detector receives at the particular time, 
 but rather the discrete fluxes of each particular grid point that may have been 
