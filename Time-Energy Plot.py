@@ -48,9 +48,8 @@ def DTprimspecmoments(Tion):
 
 '''
 Define the different temperature profiles centered around bang time:
-(need to figure out what to set temperature outside burn time range)
 '''
-t_0 = 200 #bang time (in picoseconds)
+t_0 = 210 #bang time (in picoseconds)
 burn_time = 100 #choose burn time of 100ps, take this to be equal to FWHM for now 
 t_std = burn_time / 2.35482 #converting FWHM to sigma
 
@@ -119,7 +118,7 @@ def const_temp(t, T = 15):
 
 
 ''' Defining UN-NORMALISED Source function S(E,t):
-Need to also define the temperature profile being used!! (see line 171)
+Need to also define the temperature profile being used!! (T_prof argument)
 Source is normalised in the generate_source() function
 '''
 def S(E, t, T_prof):
@@ -139,14 +138,16 @@ def S(E, t, T_prof):
 def generate_source(T_prof):
     
     #first calculate the normalisation constant by numerically integrating 
-    #over energy and time    
+    #over energy and time: (0,100) range for Energy and (0, 500) for time  
+    #assumed to be approximately the entire function 
+    
     norm_integral = sp.integrate.nquad(lambda E, t: S(E, t, T_prof), [[0, 100]
-                                                             ,[-np.inf, np.inf]])[0]
+                                                             ,[0, 500]])[0]
     norm = 1 / (norm_integral)
     print(norm)
 
     #define grid parameters
-    n_energy, n_time = (200, 100) #number of grid points
+    n_energy, n_time = (150, 150) #number of grid points
     energies = np.linspace(13, 15, n_energy) #in MeV
     times = np.linspace(100, 300, n_time) #t=100 to t=300
 
@@ -181,18 +182,9 @@ def generate_source(T_prof):
     return Z, E_grid, t_grid
 
 #%%
-
-'''Testing generate source: should plot source function and return the source data'''
+'''Testing generate_source() function: 
+   this should plot the source function and return the source data'''
 Z, E_grid, t_grid = generate_source(lininc)
-
-
-#%%
-#integrate the function over enegy and time (lindec) to check normalisation 
-
-integral = sp.integrate.nquad(lambda E, t: S(E, t, lininc), [[0, 100]
-                                                             ,[-np.inf, np.inf]])
-
-print(integral)
 
 
 #%%
@@ -230,10 +222,10 @@ particle_df = pd.DataFrame(columns = ['time emitted', 'energy', ' number of part
 
 #Goes thorugh the 2D arrays containing each energy and time and finds 
 #the number of particles for each of those values
-#i.e. saving the data of grid points if values > 1
+#i.e. only propagate grid points with values >= 1/1000th of max pdf value
 for i in range(len(Z)):
     for j in range(len(Z[0])):
-        if particles_num * Z[i][j]>1: #may need to fix this issue with the cutoff point
+        if Z[i][j] >= np.max(Z)/1000:
             
             #time in picoseconds
             time_emitted = np.append(time_emitted, t_grid[i][j])
@@ -342,7 +334,7 @@ cbar.set_label('Energies (MeV)', fontsize = 70, rotation=270)
 #fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc.png', dpi=100)    
 
 #%%
-detector = 1
+detector = 0
 time_arrive = []
     
 #times of arrivals at given detector distance
