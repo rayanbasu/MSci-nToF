@@ -397,11 +397,7 @@ plt.grid()
 
 
 #%%
-file = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy00.dat"
-                   ,header = 0, delimiter='  ')
-
-#%%
-names = ['time', 
+names = [                     'time', 
                               'zz_outt',
                               'current',
                               'qtmt',
@@ -457,5 +453,11 @@ names = ['time',
                                'CouplingCapI']
 
 #%%
-df= pd.DataFrame(data = file, columns = names)
+file = pd.read_csv("/Users/rayanbasu/Documents/GitHub/MSci-nToF/xy00.dat"
+                   ,header = 0, delimiter='  ', engine='python')
+
+relevant_data = file[['time','burn_av_Ti', 'yield_dtBHt/dt']]
+#%%
+
+
 
