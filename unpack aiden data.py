@@ -397,6 +397,65 @@ plt.grid()
 
 
 #%%
+file = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy00.dat"
+                   ,header = 0, delimiter='  ')
 
+#%%
+names = ['time', 
+                              'zz_outt',
+                              'current',
+                              'qtmt',
+                              'tohmt', 
+                              'tpdvt+tpdv2t+tpdv3t+tpdv4t',
+                              'csp',
+                              'isub_mhd',
+                              'ip34max',
+                              'xyield3t',
+                              'tten',
+                              'tket',
+                              'ttfus',
+                              'ttradloss p',
+                              'ower_kinetic_t ',
+                              'voltage',
+                              'dt',
+                              'tpdvt',
+                              'tpdv2t',
+                              'tpdv3t',
+                              'tpdv4t',
+                              'ttbe',
+                              'ttbe2',
+                              'vload',
+                              'tdtign',
+                              'tdtegn',
+                              'ttrne',
+                              'yield_dts',
+                              'mat(2)%rho(ix,iy,iz)',
+                              'Te(ix,iy,iz)',
+                              'Ti(ix,iy,iz)', 
+                              'fusion(ix,iy,iz)',
+                              'rnec(ix,iy,iz)',
+                              'rad_loss(ix,iy,iz)',
+                               'vr_av',
+                               'dxp',
+                               'dyp',
+                               'dzp',
+                               'tke2t',
+                               'yield_dtt/dt',
+                               'yield_ddt/dt',
+                               'yield_dtBHt/dt', 
+                               'yield_ddBHt/dt', 
+                               'yield_dts',
+                               'yield_dds',
+                               'yield_dtBHs',
+                               'yield_ddBHs',
+                               'BH_ratio',
+                               'burn_av_Ti',
+                               'dt_mhd',
+                               'dt_rad',
+                               'dtAlpha',
+                               'CouplingCapE',
+                               'CouplingCapI']
 
+#%%
+df= pd.DataFrame(data = file, columns = names)
 
