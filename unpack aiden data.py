@@ -397,7 +397,7 @@ plt.grid()
 
 
 #%%
-names = [                     'time', 
+'''names = [                     'time', 
                               'zz_outt',
                               'current',
                               'qtmt',
@@ -451,13 +451,42 @@ names = [                     'time',
                                'dtAlpha',
                                'CouplingCapE',
                                'CouplingCapI']
+'''
 
-#%%
-file = pd.read_csv("/Users/rayanbasu/Documents/GitHub/MSci-nToF/xy00.dat"
+#self-heating regime
+xy00 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy00.dat"
                    ,header = 0, delimiter='  ', engine='python')
 
-relevant_data = file[['time','burn_av_Ti', 'yield_dtBHt/dt']]
+xy00 = xy00[['time','burn_av_Ti', 'yield_dtBHt/dt']]
+
+
+#ignited hotspot
+xy01 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy01.dat"
+                   ,header = 0, delimiter='  ', engine='python')
+
+xy01 = xy01[['time','burn_av_Ti', 'yield_dtBHt/dt']]
+
+
+#propagating burn
+xy03 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy03.dat"
+                   ,header = 0, delimiter='  ', engine='python')
+
+xy03 = xy03[['time','burn_av_Ti', 'yield_dtBHt/dt']]
 #%%
+b=xy01.iloc[:,0:].values
+b = np.transpose(b)
+
+d=xy00.iloc[:,0:].values
+d = np.transpose(d)
+
+c=xy03.iloc[:,0:].values
+c = np.transpose(c)
+
+
+plt.plot(b[0],b[2])
+plt.plot(c[0],c[2])
+plt.plot(d[0],d[2])
+plt.xlim(xmin =0.5e-8 ,xmax = 1e-8)
 
 
 
