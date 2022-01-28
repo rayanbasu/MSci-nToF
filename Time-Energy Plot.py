@@ -132,7 +132,9 @@ def S(E, t, T_prof):
     #gaussian in time
     time_gauss = np.exp(-(t - t_0)**2 / (2 * t_std**2))
     
-    return energy_gauss * time_gauss
+    norm = 1 / (2 * np.pi * t_std * E_std)
+    
+    return norm * energy_gauss * time_gauss
 
 
 def generate_source(T_prof):
@@ -141,10 +143,10 @@ def generate_source(T_prof):
     #over energy and time: (0,100) range for Energy and (0, 500) for time  
     #assumed to be approximately the entire function 
     
-    norm_integral = sp.integrate.nquad(lambda E, t: S(E, t, T_prof), [[0, 100]
-                                                             ,[0, 500]])[0]
-    norm = 1 / (norm_integral)
-    print(norm)
+    #norm_integral = sp.integrate.nquad(lambda E, t: S(E, t, T_prof), [[0, 100]
+    #                                                         ,[0, 500]])[0]
+    #norm = 1 / (norm_integral)
+    #print(norm)
 
     #define grid parameters
     n_energy, n_time = (150, 150) #number of grid points
@@ -161,7 +163,7 @@ def generate_source(T_prof):
             Z[i][j] = S(E_grid[i][j], t_grid[i][j], T_prof)           
     
     #normalise the source
-    Z = norm * Z
+    #Z = norm * Z
     
     #plot surface
     fig = plt.figure()
@@ -184,7 +186,7 @@ def generate_source(T_prof):
 #%%
 '''Testing generate_source() function: 
    this should plot the source function and return the source data'''
-Z, E_grid, t_grid = generate_source(lininc)
+Z, E_grid, t_grid = generate_source(lindec)
 
 
 #%%
@@ -207,7 +209,7 @@ plt.ylabel('Temperature (keV)')
 This is multiplied by the pdf distribution to give the number of particles for
 each time and energy
 '''
-particles_num = 5000
+particles_num = 2000
 
 
 #Empty arrays to record data:
