@@ -13,8 +13,8 @@ from scipy.stats import kurtosis
 import pandas as pd
 from matplotlib.collections import PolyCollection
 from matplotlib import colors as mcolors
-
-
+from sklearn import linear_model
+from sklearn.model_selection import train_test_split
 
 # Returns the mean energy and variance based on Ballabio (Code from Aiden)
 # Tion in keV
@@ -58,13 +58,32 @@ burn_time = 100 #choose burn time of 100ps, take this to be equal to FWHM for no
 t_std = burn_time / 2.35482 #converting FWHM to sigma
 temp = 20
 global_list = []
+max_min = []
 
+up=[]
 
 tmin = 10
 tmax = 10
-for tmax in [20,23,31,34,35]:
-    tmin=np.random.choice([8,10,12,13])
-    print(tmin, tmax)
+
+
+
+
+detectors=[0.1,2]
+number_of_tests=100
+
+for i in range(number_of_tests):
+    
+
+    
+    tmin_1=np.random.choice(np.linspace(5,10,16))
+    tmax = np.random.choice(np.linspace(25,35,16))
+    tmin_2=np.random.choice(np.linspace(5,10,16))    
+    
+    
+    max_min.append([tmin_1,tmax,tmin_2])
+    #print(tmin_1, tmax, tmin_2)
+    
+    
     #linearly increasing temperature from 4.3keV to 15keV over burn time = 100ps
     def lininc(t, Tmin = tmin, Tmax = tmax):    
         
@@ -99,7 +118,7 @@ for tmax in [20,23,31,34,35]:
             c = y_midpoint - grad * t_0
             return grad * t + c #returns temperature in keV
         
-    def incdec(t, Tmin_1 = tmin, Tmax = tmax, Tmin_2 = tmin):
+    def incdec(t, Tmin_1 = tmin_1, Tmax = tmax, Tmin_2 = tmin_2):
         
         #temperatures constant outside burn
         if t < (t_0 - burn_time/2):
@@ -123,6 +142,24 @@ for tmax in [20,23,31,34,35]:
     def const_temp(t, T = temp):
         return T #in keV
     
+    
+    def exp(t, tmin, tmax):
+        if t < (t_0 - burn_time/2):
+            return tmin
+        
+        elif t > (t_0 + burn_time/2):
+            return tmax
+        
+        #linear increase of temperature at start of burn
+        else:
+            ex = (tmax/tmin)/(t_0 + burn_time/2)
+            return tmin*np.exp(ex)
+        
+        
+        
+        
+        
+        
     #Define Source function S(E,t)
     def S(E, t, T_prof):
         
@@ -223,7 +260,7 @@ for tmax in [20,23,31,34,35]:
     
     skews=[]
     kurts=[]
-    detectors=np.linspace(0.1,1,8)
+
     
     for detector in detectors:
         time_arrive = []
@@ -248,11 +285,15 @@ for tmax in [20,23,31,34,35]:
         plt.xlabel('Time of Arrival (ps)')
         plt.ylabel('Normalised Flux')'''
         
-        
+
         skews.append(skew(skewness))
         kurts.append(kurtosis(skewness))
-        
+    
+    up.append([skews, kurts])
+    
+    
     global_list.append(skews)
+    
     
 r'''
     plt.figure()
@@ -267,46 +308,111 @@ r'''
     plt.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc_{}_{}.png'.format(tmax, tmin), dpi=100)
 ''' 
 
-
 #%%
-from sklearn.datasets import make_regression
-
 
 cols= list(range(0,len(detectors)))
 column_string = [str(i) for i in cols]
 
 
-df = pd.DataFrame(global_list[:4],columns= column_string)
+df = pd.DataFrame(global_list[:number_of_tests],columns= column_string)
 
+X_train, X_test, y_train, y_test = train_test_split(df[column_string], max_min, test_size=0.2, random_state=42)
 
-
-from sklearn import linear_model
-
-X= df[column_string]
-y=np.array([[13,  20], [10,  23],[10,  31], [12,  34]])
 
 regr = linear_model.LinearRegression()
-regr.fit(X, y)
+regr.fit(X_train, y_train)
 
-print(regr.predict([global_list[4]]))
+pred = regr.predict(X_test)
+
+
+
+
+xxx = np.abs(np.array(pred)-np.array(y_test))
+
+
+
+df_1= pd.DataFrame(xxx,columns = ['1', '2', '3'])
+
+error1=np.round(df_1['1'].sum()/len(df_1),2)
+error2=np.round(df_1['2'].sum()/len(df_1),2)
+error3=np.round(df_1['3'].sum()/len(df_1),2)
+
+print(f'absolute error is {error1} for tmin {error2} for tmax and {error3} for tmin_2' )
+#%%
+cols= list(range(0,len(detectors)*2))
+column_string = [str(i) for i in cols]
+
+up=np.asarray(up).reshape(number_of_tests,len(detectors)*2)
+
+df = pd.DataFrame(up[:number_of_tests],columns= column_string)
+
+
+X_train, X_test, y_train, y_test = train_test_split(df[column_string], max_min, test_size=0.2, random_state=42)
+
+
+regr = linear_model.LinearRegression()
+regr.fit(X_train, y_train)
+
+
+
+
+
+pred = regr.predict(X_test)
+
+
+
+
+xxx = np.abs(np.array(pred)-np.array(y_test))
+
+
+
+df_1= pd.DataFrame(xxx,columns = ['1', '2', '3'])
+
+error1=np.round(df_1['1'].sum()/len(df_1),2)
+error2=np.round(df_1['2'].sum()/len(df_1),2)
+error3=np.round(df_1['3'].sum()/len(df_1),2)
+
+print(f'absolute error is {error1} for tmin {error2} for tmax and {error3} for tmin_2' )
 
 #%%
 
-[2,3,5,7,10]
 
-[11.05]
 
-[35.76]
+co=[2,3,5,8,10]
+
+
+
+pred = np.array([17.07, 6.5, 10.62, 14.49, 14.45])
+
+correct= np.array([13, 7, 8, 14, 12])
+
+
+plt.scatter(co, pred-correct) #100*(pred-correct)/correct)
+plt.grid()
+plt.xlabel('number of detectors')
+plt.ylabel('absolute error')
+plt.ylim(-10,10)
 #%%
 
 
 
 
-co=[2,3,5,7,10]
 
 
-err_1=[34.33, 34.44,34.45, 34.46,34.47, 34.31, 34.45]     
+err_1=np.array([34.33, 34.44,34.45, 34.46,34.47])
 
-err_2=[40.76, 34.64, 34.63,  ]
+err_2=np.array([40.76, 34.64, 34.63,  34.52, 34.40])
 
-plt.plot(co,err)            
+
+
+
+
+plt.scatter(co,(err_2)/35-1)            
+plt.grid()
+plt.xlabel('number of detectors')
+plt.ylabel('percentage error')
+plt.ylim(-1,1)
+#%%
+
+
+
