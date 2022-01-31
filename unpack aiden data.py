@@ -13,6 +13,88 @@ import pandas as pd
 from matplotlib.collections import PolyCollection
 from matplotlib import colors as mcolors
 
+# Importing Aidan's data and organising into arrays
+'''names = [                     'time', 
+                              'zz_outt',
+                              'current',
+                              'qtmt',
+                              'tohmt', 
+                              'tpdvt+tpdv2t+tpdv3t+tpdv4t',
+                              'csp',
+                              'isub_mhd',
+                              'ip34max',
+                              'xyield3t',
+                              'tten',
+                              'tket',
+                              'ttfus',
+                              'ttradloss p',
+                              'ower_kinetic_t ',
+                              'voltage',
+                              'dt',
+                              'tpdvt',
+                              'tpdv2t',
+                              'tpdv3t',
+                              'tpdv4t',
+                              'ttbe',
+                              'ttbe2',
+                              'vload',
+                              'tdtign',
+                              'tdtegn',
+                              'ttrne',
+                              'yield_dts',
+                              'mat(2)%rho(ix,iy,iz)',
+                              'Te(ix,iy,iz)',
+                              'Ti(ix,iy,iz)', 
+                              'fusion(ix,iy,iz)',
+                              'rnec(ix,iy,iz)',
+                              'rad_loss(ix,iy,iz)',
+                               'vr_av',
+                               'dxp',
+                               'dyp',
+                               'dzp',
+                               'tke2t',
+                               'yield_dtt/dt',
+                               'yield_ddt/dt',
+                               'yield_dtBHt/dt', 
+                               'yield_ddBHt/dt', 
+                               'yield_dts',
+                               'yield_dds',
+                               'yield_dtBHs',
+                               'yield_ddBHs',
+                               'BH_ratio',
+                               'burn_av_Ti',
+                               'dt_mhd',
+                               'dt_rad',
+                               'dtAlpha',
+                               'CouplingCapE',
+                               'CouplingCapI']
+'''
+
+#self-heating regime
+xy00 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy00.dat"
+                   ,header = 0, delimiter='  ', engine='python')
+xy00 = xy00[['time','burn_av_Ti', 'yield_dtBHt/dt']]
+xy00 = xy00.iloc[:,0:].values
+xy00 = np.transpose(xy00)
+xy00[0] = 1e12 * xy00[0] #converting to picoseconds
+
+#ignited hotspot
+xy01 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy01.dat"
+                   ,header = 0, delimiter='  ', engine='python')
+xy01 = xy01[['time','burn_av_Ti', 'yield_dtBHt/dt']]
+xy01 = xy01.iloc[:,0:].values
+xy01 = np.transpose(xy01)
+xy01[0] = 1e12 * xy01[0] #converting to picoseconds
+
+#propagating burn
+xy03 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy03.dat"
+                   ,header = 0, delimiter='  ', engine='python')
+xy03 = xy03[['time','burn_av_Ti', 'yield_dtBHt/dt']]
+xy03 = xy03.iloc[:,0:].values
+xy03 = np.transpose(xy03)
+xy03[0] = 1e12 * xy03[0] #converting to picoseconds
+
+
 # Returns the mean energy and variance based on Ballabio (Code from Aiden)
 # Tion in keV
 def DTprimspecmoments(Tion):
@@ -115,10 +197,10 @@ def generate_source(regime):
     #customise plot
     ax.set_ylabel('time (ps)')
     ax.set_xlabel('energy (Mev)')
-    ax.set_ylim3d(8850, 9100)
+    ax.set_ylim3d(7000,7500)#8850, 9100)
     #ax.set_zlabel('pdf')
     #ax.set_yticks(np.arange(0,0.125,0.025))
-    ax.azim = 40
+    ax.azim = -40
     ax.elev = 40
     fig.colorbar(surf, shrink=0.5, aspect=15)
     #plt.title("Linearly Increasing Temperature")
@@ -127,26 +209,25 @@ def generate_source(regime):
     return Z, E_grid, t_grid
 
 
-#%%
-'''Testing generate_source() function: 
-   this should plot the source function and return the source data'''
-Z, E_grid, t_grid = generate_source(lininc)
+#%% Plotting temp against time for different regimes
 
+plt.plot(xy00[0], xy00[1], label='Self-heating')
+plt.plot(xy01[0], xy01[1], label='Ignited Hotspot')
+plt.plot(xy03[0], xy03[1], label='Propagating Burn')
+plt.xlabel('Time (s)')
+plt.ylabel('Burn average Ti')
+plt.legend()
+#plt.xlim(xmin =0.5e-8 ,xmax = 1e-8)
 
-#%%
-''' Validating temperature profiles and seeing how std varies with profile '''
-t = np.linspace(0,1000,1000)
-T = np.zeros(len(t))
-for i in range(len(t)):
-    T[i] = incdec(t[i])
+#%% Plotting neutron yield against time for different regimes
 
-sigma = np.sqrt(DTprimspecmoments(T)[1])
-
-plt.plot(t, T)    
-#plt.plot(t, sigma)
-plt.title('Temperature against Time')
-plt.xlabel('Time (ps)')
-plt.ylabel('Temperature (keV)')
+plt.plot(xy00[0], xy00[2], label='Self-heating')
+plt.plot(xy01[0], xy01[2], label='Ignited Hotspot')
+plt.plot(xy03[0], xy03[2], label='Propagating Burn')
+plt.xlabel('Time (s)')
+plt.ylabel('Neutron Yield')
+plt.legend()
+#plt.xlim(xmin =0.5e-8 ,xmax = 1e-8)
 
 #%%
 '''
@@ -342,108 +423,6 @@ plt.grid()
 #plt.xlim(xmax = 2)
 
 
-#%% Importing Aidan's data and organising into arrays
-'''names = [                     'time', 
-                              'zz_outt',
-                              'current',
-                              'qtmt',
-                              'tohmt', 
-                              'tpdvt+tpdv2t+tpdv3t+tpdv4t',
-                              'csp',
-                              'isub_mhd',
-                              'ip34max',
-                              'xyield3t',
-                              'tten',
-                              'tket',
-                              'ttfus',
-                              'ttradloss p',
-                              'ower_kinetic_t ',
-                              'voltage',
-                              'dt',
-                              'tpdvt',
-                              'tpdv2t',
-                              'tpdv3t',
-                              'tpdv4t',
-                              'ttbe',
-                              'ttbe2',
-                              'vload',
-                              'tdtign',
-                              'tdtegn',
-                              'ttrne',
-                              'yield_dts',
-                              'mat(2)%rho(ix,iy,iz)',
-                              'Te(ix,iy,iz)',
-                              'Ti(ix,iy,iz)', 
-                              'fusion(ix,iy,iz)',
-                              'rnec(ix,iy,iz)',
-                              'rad_loss(ix,iy,iz)',
-                               'vr_av',
-                               'dxp',
-                               'dyp',
-                               'dzp',
-                               'tke2t',
-                               'yield_dtt/dt',
-                               'yield_ddt/dt',
-                               'yield_dtBHt/dt', 
-                               'yield_ddBHt/dt', 
-                               'yield_dts',
-                               'yield_dds',
-                               'yield_dtBHs',
-                               'yield_ddBHs',
-                               'BH_ratio',
-                               'burn_av_Ti',
-                               'dt_mhd',
-                               'dt_rad',
-                               'dtAlpha',
-                               'CouplingCapE',
-                               'CouplingCapI']
-'''
-
-#self-heating regime
-xy00 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy00.dat"
-                   ,header = 0, delimiter='  ', engine='python')
-xy00 = xy00[['time','burn_av_Ti', 'yield_dtBHt/dt']]
-xy00 = xy00.iloc[:,0:].values
-xy00 = np.transpose(xy00)
-xy00[0] = 1e12 * xy00[0] #converting to picoseconds
-
-#ignited hotspot
-xy01 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy01.dat"
-                   ,header = 0, delimiter='  ', engine='python')
-xy01 = xy01[['time','burn_av_Ti', 'yield_dtBHt/dt']]
-xy01 = xy01.iloc[:,0:].values
-xy01 = np.transpose(xy01)
-xy01[0] = 1e12 * xy01[0] #converting to picoseconds
-
-#propagating burn
-xy03 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy03.dat"
-                   ,header = 0, delimiter='  ', engine='python')
-xy03 = xy03[['time','burn_av_Ti', 'yield_dtBHt/dt']]
-xy03 = xy03.iloc[:,0:].values
-xy03 = np.transpose(xy03)
-xy03[0] = 1e12 * xy03[0] #converting to picoseconds
-
-
-#%% Plotting temp against time for different regimes
-
-plt.plot(xy00[0], xy00[1], label='Self-heating')
-plt.plot(xy01[0], xy01[1], label='Ignited Hotspot')
-plt.plot(xy03[0], xy03[1], label='Propagating Burn')
-plt.xlabel('Time (s)')
-plt.ylabel('Burn average Ti')
-plt.legend()
-#plt.xlim(xmin =0.5e-8 ,xmax = 1e-8)
-
-#%% Plotting neutron yield against time for different regimes
-
-plt.plot(xy00[0], xy00[2], label='Self-heating')
-plt.plot(xy01[0], xy01[2], label='Ignited Hotspot')
-plt.plot(xy03[0], xy03[2], label='Propagating Burn')
-plt.xlabel('Time (s)')
-plt.ylabel('Neutron Yield')
-plt.legend()
-#plt.xlim(xmin =0.5e-8 ,xmax = 1e-8)
-
 #%%
 '''
 Redefine the different temperature profiles centered around bang time:
@@ -479,5 +458,5 @@ plt.xlim(xmin =0.5e-8 ,xmax = 1e-8)
 
 #%%
 
-generate_source(xy03)
+generate_source(xy00)
     
