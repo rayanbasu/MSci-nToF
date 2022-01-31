@@ -54,102 +54,46 @@ burn_time = 100 #choose burn time of 100ps, take this to be equal to FWHM for no
 t_std = burn_time / 2.35482 #converting FWHM to sigma
 
 
-#linearly increasing temperature from 4.3keV to 15keV over burn time = 100ps
-def lininc(t, Tmin = 4.3, Tmax = 15):    
-    
-    #temperatures constant outside burn
-    if t < (t_0 - burn_time/2):
-        return Tmin
-    
-    elif t > (t_0 + burn_time/2):
-        return Tmax
-    
-    else: #during burn
-        grad = (Tmax - Tmin) / burn_time
-        y_midpoint = (Tmax + Tmin) / 2
-        c = y_midpoint - grad * t_0
-        return grad * t + c #returns temperature in keV
-    
-    
-#linearly decreasing temperature from 10keV to 1keV over burn time = 100ps.
-def lindec(t, Tmin = 3, Tmax = 10):
-    
-    #temperatures constant outside burn
-    if t < (t_0 - burn_time/2):
-        return Tmax
-    
-    elif t > (t_0 + burn_time/2):
-        return Tmin
-    
-    #during burn
-    else:
-        grad = (Tmin - Tmax) / burn_time
-        y_midpoint = (Tmax + Tmin) / 2
-        c = y_midpoint - grad * t_0
-        return grad * t + c #returns temperature in keV
-    
-    
-#linearly increasing then decreasing temperature over burn time = 100ps.
-def incdec(t, Tmin_1 = 2, Tmax = 15, Tmin_2 = 2):
-    
-    #temperatures constant outside burn
-    if t < (t_0 - burn_time/2):
-        return Tmin_1
-    
-    elif t > (t_0 + burn_time/2):
-        return Tmin_2
-    
-    #linear increase of temperature at start of burn
-    elif t > (t_0 - burn_time/2) and t < t_0:
-        grad = (Tmax - Tmin_1) / (burn_time/2)
-        c = Tmax - grad * t_0
-        return grad * t + c #returns temperature in keV
-    
-    #linear decrease of temperature in second half of burn
-    elif t < (t_0 + burn_time/2) and t > t_0:
-        grad = (Tmin_2 - Tmax) / (burn_time/2)
-        c = Tmax - grad * t_0
-        return grad * t + c #returns temperature in keV
-    
-
-#constant temperature profile 
-def const_temp(t, T = 15):
-    return T #in keV
-
 
 ''' Defining UN-NORMALISED Source function S(E,t):
 Need to also define the temperature profile being used!! (T_prof argument)
 Source is normalised in the generate_source() function
 '''
-def S(E, t, T_prof):
+
+def S(E, t, regime, index):
     
-    E_0, E_var = DTprimspecmoments(T_prof(t)) 
+    #t_0 = regime[0][np.argmax(regime[2])] #bang time (in picoseconds) 
+    E_0, E_var = DTprimspecmoments(regime[1][index])
     E_std = np.sqrt(E_var)
-    
+        
     #gaussian in energy (taken in units of MeV)
     energy_gauss = np.exp(-(E - E_0)**2 / (2 * E_std**2))
     
-    #gaussian in time
-    time_gauss = np.exp(-(t - t_0)**2 / (2 * t_std**2))
+    #time contribution 
+    time_contribution = regime[2][index]
     
-    return energy_gauss * time_gauss
+    #norm = 1 / (2 * np.pi * t_std * E_std)
+    
+    return energy_gauss * time_contribution
 
 
-def generate_source(T_prof):
+#only for existing dataset (should already be normalised)
+def generate_source(regime):
     
     #first calculate the normalisation constant by numerically integrating 
     #over energy and time: (0,100) range for Energy and (0, 500) for time  
     #assumed to be approximately the entire function 
     
-    norm_integral = sp.integrate.nquad(lambda E, t: S(E, t, T_prof), [[0, 100]
-                                                             ,[0, 500]])[0]
-    norm = 1 / (norm_integral)
-    print(norm)
+    #norm_integral = sp.integrate.nquad(lambda E, t: S(E, t, T_prof), [[0, 100]
+    #                                                         ,[0, 500]])[0]
+    #norm = 1 / (norm_integral)
+    #print(norm)
 
     #define grid parameters
-    n_energy, n_time = (150, 150) #number of grid points
-    energies = np.linspace(13, 15, n_energy) #in MeV
-    times = np.linspace(100, 300, n_time) #t=100 to t=300
+    n_energy, n_time = (150, len(regime[0])) #number of grid points
+    energies = np.linspace(-20, 80, n_energy) #in MeV
+    times = regime[0] 
+
 
     #generate grid
     E_grid, t_grid = np.meshgrid(energies, times) 
@@ -158,10 +102,10 @@ def generate_source(T_prof):
     #creating data, Z are the values of the pdf
     for i in range(len(Z)):
         for j in range(len(Z[0])):
-            Z[i][j] = S(E_grid[i][j], t_grid[i][j], T_prof)           
+            Z[i][j] = S(E_grid[i][j], t_grid[i][j], regime, index = i)           
     
     #normalise the source
-    Z = norm * Z
+    #Z = norm * Z
     
     #plot surface
     fig = plt.figure()
@@ -171,15 +115,17 @@ def generate_source(T_prof):
     #customise plot
     ax.set_ylabel('time (ps)')
     ax.set_xlabel('energy (Mev)')
+    ax.set_ylim3d(8850, 9100)
     #ax.set_zlabel('pdf')
     #ax.set_yticks(np.arange(0,0.125,0.025))
-    ax.azim =- 80
+    ax.azim = 40
     ax.elev = 40
     fig.colorbar(surf, shrink=0.5, aspect=15)
     #plt.title("Linearly Increasing Temperature")
 
     plt.show()
     return Z, E_grid, t_grid
+
 
 #%%
 '''Testing generate_source() function: 
@@ -459,6 +405,7 @@ xy00 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy00.dat"
 xy00 = xy00[['time','burn_av_Ti', 'yield_dtBHt/dt']]
 xy00 = xy00.iloc[:,0:].values
 xy00 = np.transpose(xy00)
+xy00[0] = 1e12 * xy00[0] #converting to picoseconds
 
 #ignited hotspot
 xy01 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy01.dat"
@@ -466,6 +413,7 @@ xy01 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy01.dat"
 xy01 = xy01[['time','burn_av_Ti', 'yield_dtBHt/dt']]
 xy01 = xy01.iloc[:,0:].values
 xy01 = np.transpose(xy01)
+xy01[0] = 1e12 * xy01[0] #converting to picoseconds
 
 #propagating burn
 xy03 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy03.dat"
@@ -473,6 +421,7 @@ xy03 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy03.dat"
 xy03 = xy03[['time','burn_av_Ti', 'yield_dtBHt/dt']]
 xy03 = xy03.iloc[:,0:].values
 xy03 = np.transpose(xy03)
+xy03[0] = 1e12 * xy03[0] #converting to picoseconds
 
 
 #%% Plotting temp against time for different regimes
@@ -483,7 +432,7 @@ plt.plot(xy03[0], xy03[1], label='Propagating Burn')
 plt.xlabel('Time (s)')
 plt.ylabel('Burn average Ti')
 plt.legend()
-plt.xlim(xmin =0.5e-8 ,xmax = 1e-8)
+#plt.xlim(xmin =0.5e-8 ,xmax = 1e-8)
 
 #%% Plotting neutron yield against time for different regimes
 
@@ -493,76 +442,7 @@ plt.plot(xy03[0], xy03[2], label='Propagating Burn')
 plt.xlabel('Time (s)')
 plt.ylabel('Neutron Yield')
 plt.legend()
-plt.xlim(xmin =0.5e-8 ,xmax = 1e-8)
-
-
-
-#%%
-
-def S(E, t, regime):
-    
-    t_0 = regime[0][np.argmax(regime[2])]#bang time (in picoseconds) 
-    E_0, E_var = DTprimspecmoments(regime[1][]
-    E_std = np.sqrt(E_var)
-        
-    #gaussian in energy (taken in units of MeV)
-    energy_gauss = np.exp(-(E - E_0)**2 / (2 * E_std**2))
-    
-    
-    #gaussian in time
-    time_gauss = np.exp(-(t - t_0)**2 / (2 * t_std**2))
-    
-    norm = 1 / (2 * np.pi * t_std * E_std)
-    
-    return norm * energy_gauss * time_gauss
-
-def generate_source(regime):
-    
-    #first calculate the normalisation constant by numerically integrating 
-    #over energy and time: (0,100) range for Energy and (0, 500) for time  
-    #assumed to be approximately the entire function 
-    
-    #norm_integral = sp.integrate.nquad(lambda E, t: S(E, t, T_prof), [[0, 100]
-    #                                                         ,[0, 500]])[0]
-    #norm = 1 / (norm_integral)
-    #print(norm)
-
-    #define grid parameters
-    n_energy, n_time = (150, len(regime[0])) #number of grid points
-    energies = np.linspace(13, 15, n_energy) #in MeV
-    times = regime[0] #t=100 to t=300
-
-
-    #generate grid
-    E_grid, t_grid = np.meshgrid(energies, times) 
-    Z = np.zeros([n_time, n_energy])
-
-    #creating data, Z are the values of the pdf
-    for i in range(len(Z)):
-        for j in range(len(Z[0])):
-            Z[i][j] = S(E_grid[i][j], t_grid[i][j], T_prof)           
-    
-    #normalise the source
-    Z = norm * Z
-    
-    #plot surface
-    fig = plt.figure()
-    ax = Axes3D(fig)
-    surf = ax.plot_surface(E_grid, t_grid, Z, cmap=cm.coolwarm)
-
-    #customise plot
-    ax.set_ylabel('time (ps)')
-    ax.set_xlabel('energy (Mev)')
-    #ax.set_zlabel('pdf')
-    #ax.set_yticks(np.arange(0,0.125,0.025))
-    ax.azim =- 80
-    ax.elev = 40
-    fig.colorbar(surf, shrink=0.5, aspect=15)
-    #plt.title("Linearly Increasing Temperature")
-
-    plt.show()
-    return Z, E_grid, t_grid
-
+#plt.xlim(xmin =0.5e-8 ,xmax = 1e-8)
 
 #%%
 '''
@@ -596,4 +476,8 @@ regime = xy03
 
 plt.plot(regime[0], gaussian(regime[0], regime))
 plt.xlim(xmin =0.5e-8 ,xmax = 1e-8)
+
+#%%
+
+generate_source(xy03)
     
