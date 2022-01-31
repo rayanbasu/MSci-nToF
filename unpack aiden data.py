@@ -396,7 +396,7 @@ plt.grid()
 #plt.xlim(xmax = 2)
 
 
-#%%
+#%% Importing Aidan's data and organising into arrays
 '''names = [                     'time', 
                               'zz_outt',
                               'current',
@@ -456,37 +456,144 @@ plt.grid()
 #self-heating regime
 xy00 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy00.dat"
                    ,header = 0, delimiter='  ', engine='python')
-
 xy00 = xy00[['time','burn_av_Ti', 'yield_dtBHt/dt']]
-
+xy00 = xy00.iloc[:,0:].values
+xy00 = np.transpose(xy00)
 
 #ignited hotspot
 xy01 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy01.dat"
                    ,header = 0, delimiter='  ', engine='python')
-
 xy01 = xy01[['time','burn_av_Ti', 'yield_dtBHt/dt']]
-
+xy01 = xy01.iloc[:,0:].values
+xy01 = np.transpose(xy01)
 
 #propagating burn
 xy03 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy03.dat"
                    ,header = 0, delimiter='  ', engine='python')
-
 xy03 = xy03[['time','burn_av_Ti', 'yield_dtBHt/dt']]
-#%%
-b=xy01.iloc[:,0:].values
-b = np.transpose(b)
-
-d=xy00.iloc[:,0:].values
-d = np.transpose(d)
-
-c=xy03.iloc[:,0:].values
-c = np.transpose(c)
+xy03 = xy03.iloc[:,0:].values
+xy03 = np.transpose(xy03)
 
 
-plt.plot(b[0],b[2])
-plt.plot(c[0],c[2])
-plt.plot(d[0],d[2])
+#%% Plotting temp against time for different regimes
+
+plt.plot(xy00[0], xy00[1], label='Self-heating')
+plt.plot(xy01[0], xy01[1], label='Ignited Hotspot')
+plt.plot(xy03[0], xy03[1], label='Propagating Burn')
+plt.xlabel('Time (s)')
+plt.ylabel('Burn average Ti')
+plt.legend()
+plt.xlim(xmin =0.5e-8 ,xmax = 1e-8)
+
+#%% Plotting neutron yield against time for different regimes
+
+plt.plot(xy00[0], xy00[2], label='Self-heating')
+plt.plot(xy01[0], xy01[2], label='Ignited Hotspot')
+plt.plot(xy03[0], xy03[2], label='Propagating Burn')
+plt.xlabel('Time (s)')
+plt.ylabel('Neutron Yield')
+plt.legend()
 plt.xlim(xmin =0.5e-8 ,xmax = 1e-8)
 
 
 
+#%%
+
+def S(E, t, regime):
+    
+    t_0 = regime[0][np.argmax(regime[2])]#bang time (in picoseconds) 
+    E_0, E_var = DTprimspecmoments(regime[1][]
+    E_std = np.sqrt(E_var)
+        
+    #gaussian in energy (taken in units of MeV)
+    energy_gauss = np.exp(-(E - E_0)**2 / (2 * E_std**2))
+    
+    
+    #gaussian in time
+    time_gauss = np.exp(-(t - t_0)**2 / (2 * t_std**2))
+    
+    norm = 1 / (2 * np.pi * t_std * E_std)
+    
+    return norm * energy_gauss * time_gauss
+
+def generate_source(regime):
+    
+    #first calculate the normalisation constant by numerically integrating 
+    #over energy and time: (0,100) range for Energy and (0, 500) for time  
+    #assumed to be approximately the entire function 
+    
+    #norm_integral = sp.integrate.nquad(lambda E, t: S(E, t, T_prof), [[0, 100]
+    #                                                         ,[0, 500]])[0]
+    #norm = 1 / (norm_integral)
+    #print(norm)
+
+    #define grid parameters
+    n_energy, n_time = (150, len(regime[0])) #number of grid points
+    energies = np.linspace(13, 15, n_energy) #in MeV
+    times = regime[0] #t=100 to t=300
+
+
+    #generate grid
+    E_grid, t_grid = np.meshgrid(energies, times) 
+    Z = np.zeros([n_time, n_energy])
+
+    #creating data, Z are the values of the pdf
+    for i in range(len(Z)):
+        for j in range(len(Z[0])):
+            Z[i][j] = S(E_grid[i][j], t_grid[i][j], T_prof)           
+    
+    #normalise the source
+    Z = norm * Z
+    
+    #plot surface
+    fig = plt.figure()
+    ax = Axes3D(fig)
+    surf = ax.plot_surface(E_grid, t_grid, Z, cmap=cm.coolwarm)
+
+    #customise plot
+    ax.set_ylabel('time (ps)')
+    ax.set_xlabel('energy (Mev)')
+    #ax.set_zlabel('pdf')
+    #ax.set_yticks(np.arange(0,0.125,0.025))
+    ax.azim =- 80
+    ax.elev = 40
+    fig.colorbar(surf, shrink=0.5, aspect=15)
+    #plt.title("Linearly Increasing Temperature")
+
+    plt.show()
+    return Z, E_grid, t_grid
+
+
+#%%
+'''
+Redefine the different temperature profiles centered around bang time:
+'''
+
+#find width of FWHM
+def find_nearest(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return idx
+
+def gaussian(t, regime):
+    
+    t_0 = regime[0][np.argmax(regime[2])]#bang time (in picoseconds)
+    print(t_0)
+    
+    #find FWHM
+    index = find_nearest(regime[2], max(regime[2])/2)
+    burn_time = abs(regime[0][index] - t_0) #choose burn time of 100ps, take this to be equal to FWHM for now
+    
+    t_std = burn_time / 2.35482 #converting FWHM to sigma
+    
+    time_gauss = np.exp(-(t - t_0)**2 / (2 * t_std**2))
+    
+    return time_gauss
+    
+
+#%%
+regime = xy03
+
+plt.plot(regime[0], gaussian(regime[0], regime))
+plt.xlim(xmin =0.5e-8 ,xmax = 1e-8)
+    
