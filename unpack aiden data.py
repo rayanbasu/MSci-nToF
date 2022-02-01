@@ -142,19 +142,19 @@ Need to also define the temperature profile being used!! (T_prof argument)
 Source is normalised in the generate_source() function
 '''
 
-def S(E, t, regime, index):
-    
+def S(E, t, regime, index):  
     #t_0 = regime[0][np.argmax(regime[2])] #bang time (in picoseconds) 
     E_0, E_var = DTprimspecmoments(regime[1][index])
     E_std = np.sqrt(E_var)
-        
+    #print(E_std)
+    
     #gaussian in energy (taken in units of MeV)
     energy_gauss = np.exp(-(E - E_0)**2 / (2 * E_std**2))
     
     #time contribution 
     time_contribution = regime[2][index]
     
-    #norm = 1 / (2 * np.pi * t_std * E_std)
+    #norm = 1 / (np.sqrt(2*np.pi) * E_std)
     
     return energy_gauss * time_contribution
 
@@ -184,8 +184,12 @@ def generate_source(regime):
     #creating data, Z are the values of the pdf
     for i in range(len(Z)):
         for j in range(len(Z[0])):
-            Z[i][j] = S(E_grid[i][j], t_grid[i][j], regime, index = i)           
-    
+            Z[i][j] = S(E_grid[i][j], t_grid[i][j], regime, index = i)
+            
+            #get rid of small values
+            #if Z[i][j] == 0:
+             #   Z[i][j] = float('nan')
+            
     #normalise the source
     #Z = norm * Z
     
@@ -200,7 +204,7 @@ def generate_source(regime):
     ax.set_ylim3d(7000,7500)#8850, 9100)
     #ax.set_zlabel('pdf')
     #ax.set_yticks(np.arange(0,0.125,0.025))
-    ax.azim = -40
+    ax.azim = 90
     ax.elev = 40
     fig.colorbar(surf, shrink=0.5, aspect=15)
     #plt.title("Linearly Increasing Temperature")
@@ -230,11 +234,14 @@ plt.legend()
 #plt.xlim(xmin =0.5e-8 ,xmax = 1e-8)
 
 #%%
+
+Z, E_grid, t_grid = generate_source(xy00)
+
+#%%
 '''
 This is multiplied by the pdf distribution to give the number of particles for
 each time and energy
 '''
-particles_num = 5000
 
 
 #Empty arrays to record data:
@@ -421,33 +428,6 @@ plt.grid()
 #plt.title('Constant Temperature (20 keV)')
 #plt.title('Linearly Decreasing (35 to 1 keV)')
 #plt.xlim(xmax = 2)
-
-
-#%%
-'''
-Redefine the different temperature profiles centered around bang time:
-'''
-
-#find width of FWHM
-def find_nearest(array, value):
-    array = np.asarray(array)
-    idx = (np.abs(array - value)).argmin()
-    return idx
-
-def gaussian(t, regime):
-    
-    t_0 = regime[0][np.argmax(regime[2])]#bang time (in picoseconds)
-    print(t_0)
-    
-    #find FWHM
-    index = find_nearest(regime[2], max(regime[2])/2)
-    burn_time = abs(regime[0][index] - t_0) #choose burn time of 100ps, take this to be equal to FWHM for now
-    
-    t_std = burn_time / 2.35482 #converting FWHM to sigma
-    
-    time_gauss = np.exp(-(t - t_0)**2 / (2 * t_std**2))
-    
-    return time_gauss
     
 
 #%%
@@ -456,7 +436,4 @@ regime = xy03
 plt.plot(regime[0], gaussian(regime[0], regime))
 plt.xlim(xmin =0.5e-8 ,xmax = 1e-8)
 
-#%%
-
-generate_source(xy00)
     
