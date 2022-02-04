@@ -149,9 +149,9 @@ def generate_source(T_prof):
     #print(norm)
 
     #define grid parameters
-    n_energy, n_time = (150, 150) #number of grid points
+    n_energy, n_time = (200, 400) #number of grid points
     energies = np.linspace(13, 15, n_energy) #in MeV
-    times = np.linspace(100, 300, n_time) #t=100 to t=300
+    times = np.linspace(0, 420, n_time) #t=100 to t=300
 
     #generate grid
     E_grid, t_grid = np.meshgrid(energies, times) 
@@ -227,7 +227,7 @@ particle_df = pd.DataFrame(columns = ['time emitted', 'energy', ' number of part
 #i.e. only propagate grid points with values >= 1/1000th of max pdf value
 for i in range(len(Z)):
     for j in range(len(Z[0])):
-        if Z[i][j] >= np.max(Z)/1000:
+        if Z[i][j] >= np.max(Z)/10000:
             
             #time in picoseconds
             time_emitted = np.append(time_emitted, t_grid[i][j])
@@ -368,7 +368,7 @@ plt.ylabel('Normalised Flux')
 #%%
 ''' plotting skewness wrt detector positions'''
 skews=[]
-detectors=[0] #np.linspace(0,3,20)
+detectors=np.linspace(0,3,20)
 
 for detector in detectors:
     time_arrive = []

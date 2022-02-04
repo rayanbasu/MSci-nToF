@@ -201,10 +201,12 @@ def generate_source(regime):
     #customise plot
     ax.set_ylabel('time (ps)')
     ax.set_xlabel('energy (Mev)')
-    ax.set_ylim3d(7000,7500)#8850, 9100)
+    #ax.set_ylim3d(7000,7500) #for xy00
+    ax.set_ylim3d(8000,8500) #for xy01
+    #ax.set_ylim3d(8850,9100) #for xy03
     #ax.set_zlabel('pdf')
     #ax.set_yticks(np.arange(0,0.125,0.025))
-    ax.azim = 90
+    ax.azim = 40
     ax.elev = 40
     fig.colorbar(surf, shrink=0.5, aspect=15)
     #plt.title("Linearly Increasing Temperature")
@@ -235,14 +237,9 @@ plt.legend()
 
 #%%
 
-Z, E_grid, t_grid = generate_source(xy00)
+Z, E_grid, t_grid = generate_source(xy01)
 
 #%%
-'''
-This is multiplied by the pdf distribution to give the number of particles for
-each time and energy
-'''
-
 
 #Empty arrays to record data:
 time_emitted = np.array([]) #time particle was emitted
@@ -250,16 +247,12 @@ velocities = np.array([]) #particle velocities
 number_of_particles = np.array([]) #number of respective particles with above values
 energies = [] #turn into array!!!
 
-#Just a dataframe
-particle_df = pd.DataFrame(columns = ['time emitted', 'energy', ' number of particles'])
-
-
 #Goes thorugh the 2D arrays containing each energy and time and finds 
 #the number of particles for each of those values
 #i.e. only propagate grid points with values >= 1/1000th of max pdf value
 for i in range(len(Z)):
     for j in range(len(Z[0])):
-        if Z[i][j] >= np.max(Z)/1000:
+        if Z[i][j] > 0:
             
             #time in picoseconds
             time_emitted = np.append(time_emitted, t_grid[i][j])
@@ -272,7 +265,7 @@ for i in range(len(Z)):
                                       / 1.67e-27))
             
             #save integer number of particles
-            num = np.round(particles_num  * Z[i][j]) # may have a problem here with rounding
+            num = Z[i][j]
             number_of_particles = np.append(number_of_particles, num)
             
           
@@ -400,9 +393,10 @@ plt.ylabel('Normalised Flux')
 #%%
 ''' plotting skewness wrt detector positions'''
 skews=[]
-detectors=[0] #np.linspace(0,3,20)
+detectors= np.linspace(0,3,20)
 
 for detector in detectors:
+    print(detector)
     time_arrive = []
         
     for i in range(len(number_of_particles)):
