@@ -117,6 +117,9 @@ def const_temp(t, T = 15):
     return T #in keV
 
 
+def var_gaussian(t, ):
+    return
+
 ''' Defining UN-NORMALISED Source function S(E,t):
 Need to also define the temperature profile being used!! (T_prof argument)
 Source is normalised in the generate_source() function
