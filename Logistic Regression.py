@@ -8,14 +8,12 @@ Created on Thu Jan 27 23:48:10 2022
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import cm
+
 from scipy.stats import skew
 from scipy.stats import kurtosis
 import pandas as pd
-from matplotlib.collections import PolyCollection
-from matplotlib import colors as mcolors
-from sklearn import linear_model
+from sklearn.linear_model import LogisticRegression
+from sklearn import metrics
 from sklearn.model_selection import train_test_split
 
 # Returns the mean energy and variance based on Ballabio (Code from Aiden)
@@ -68,22 +66,37 @@ tmin = 10
 tmax = 10
 
 
+tmin_1=10
+tmax_1=15
+tmin_2=10
 
 
 detectors=[0.3]
-number_of_tests=10
+number_of_tests=250
+
+
+t_mid_list=[]
 
 for i in range(number_of_tests):
-    
+    print(i)
 
-    
+    '''
     tmin=np.random.choice(np.linspace(5,10,16))
     tmax = np.random.choice(np.linspace(25,35,16))
     #tmin_2=np.random.choice(np.linspace(5,10,16))    
+    '''
+    t_random = np.random.choice([150,160,170,180, 190, 210, 220, 230, 240, 250])
     
+    tmin_1 = np.random.choice(np.linspace(5,10,11))
+    tmax_1= np.random.choice(np.linspace(20,30,11))
+    tmin_2 = np.random.choice(np.linspace(5,10,11))
     
-    max_min.append([tmin,tmax])
+    max_min.append([tmin_1,tmax_1, tmin_2])
     #print(tmin_1, tmax, tmin_2)
+    print(t_random)
+    
+    
+    t_mid_list.append(t_random)
     
     
     #linearly increasing temperature from 4.3keV to 15keV over burn time = 100ps
@@ -120,30 +133,36 @@ for i in range(number_of_tests):
             c = y_midpoint - grad * t_0
             return grad * t + c #returns temperature in keV
         
-    '''def incdec(t, Tmin_1 = tmin_1, Tmax = tmax, Tmin_2 = tmin_2):
-        
+    def incdec(t, Tmin_1 = tmin_1, Tmax = tmax_1, Tmin_2 = tmin_2, tmid=t_random):
+
         #temperatures constant outside burn
-        if t < (t_0 - burn_time/2):
+        min_time = t_0 - burn_time/2
+        max_time = t_0 + burn_time/2
+
+        if t < min_time:
             return Tmin_1
         
-        elif t > (t_0 + burn_time/2):
+        elif t > max_time:
             return Tmin_2
         
         #linear increase of temperature at start of burn
-        elif t > (t_0 - burn_time/2) and t < t_0:
-            grad = (Tmax - Tmin_1) / (burn_time/2)
-            c = Tmax - grad * t_0
+        elif t > min_time and t < tmid:
+            grad = (Tmax - Tmin_1) / (tmid-min_time)
+            c = Tmin_1 - grad * min_time
             return grad * t + c #returns temperature in keV
         
         #linear decrease of temperature in second half of burn
-        elif t < (t_0 + burn_time/2) and t > t_0:
-            grad = (Tmin_2 - Tmax) / (burn_time/2)
-            c = Tmax - grad * t_0
+        elif t < max_time and t > tmid:
+            grad = (Tmin_2 - Tmax) / (max_time-tmid)
+            c = Tmin_2 - grad * max_time
             return grad * t + c #returns temperature in keV    
+        
+        
+        
     #constant temperature profile 
     def const_temp(t, T = temp):
         return T #in keV
-    '''
+    
     
     def exp(t, tmin, tmax):
         if t < (t_0 - burn_time/2):
@@ -163,6 +182,7 @@ for i in range(number_of_tests):
         
         
     #Define Source function S(E,t)
+
     def S(E, t, T_prof):
         
         E_0, E_var = DTprimspecmoments(T_prof(t)) 
@@ -174,7 +194,9 @@ for i in range(number_of_tests):
         #gaussian in time
         time_gauss = np.exp(-(t - t_0)**2 / (2 * t_std**2))
         
-        return energy_gauss * time_gauss
+        norm = 1 / (2 * np.pi * t_std * E_std)
+        
+        return norm * energy_gauss * time_gauss
 
 
     def generate_source(T_prof):
@@ -224,7 +246,7 @@ for i in range(number_of_tests):
 
 
     '''Testing generate source: should plot source function and return the source data'''
-    Z, E_grid, t_grid = generate_source(lininc)
+    Z, E_grid, t_grid = generate_source(incdec)
 
     particles_num = 1000
     
@@ -297,6 +319,9 @@ for i in range(number_of_tests):
     global_list.append(skews)
     
     
+    
+   
+
 r'''
     plt.figure()
     plt.plot(detectors,skews, 'x')
@@ -310,26 +335,44 @@ r'''
     plt.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc_{}_{}.png'.format(tmax, tmin), dpi=100)
 ''' 
 #%%
+t = np.linspace(0,1000,1000)
+T = np.zeros(len(t))
+for i in range(len(t)):
+    T[i] = incdec(t[i], 10, 30, 10, 180)
+
+sigma = np.sqrt(DTprimspecmoments(T)[1])
+ 
+plt.plot(t, T)    
+#plt.plot(t, sigma)
+plt.title('Temperature against Time')
+plt.xlabel('Time (ps)')
+plt.ylabel('Temperature (keV)')#%%
+#%%
+
+
 
 
 cols= list(range(0,len(detectors)))
 column_string = [str(i) for i in cols]
 
 
-df_1 = pd.DataFrame(global_list[:number_of_tests],columns= column_string)
-df_1['label']='Inc'
+df_2 = pd.DataFrame(global_list[:number_of_tests],columns= column_string)
 
+labels = []
 
-#%%
+for i in range(len(t_mid_list)):
+    if t_mid_list[i]<200:
+        labels.append('Dec')
+        
+    else:
+        labels.append('Inc')
 
-df_2=df.append(df_1)
-
-df_2=df_2.sample(frac=1)
+df_2['label']=labels
 #%%
 
 X_train, X_test, y_train, y_test = train_test_split(df_2[column_string], df_2['label'], test_size=0.2, random_state=42)
 
-from sklearn.linear_model import LogisticRegression
+
 
 # instantiate the model (using the default parameters)
 logreg = LogisticRegression()
@@ -339,6 +382,14 @@ logreg.fit(X_train,y_train)
 
 #
 y_pred=logreg.predict(X_test)
-from sklearn import metrics
+
+
 cnf_matrix = metrics.confusion_matrix(y_test, y_pred)
+
+
+print("Accuracy:",metrics.accuracy_score(y_test, y_pred))
+
+
+predictions=pd.DataFrame({'skew': np.asarray(X_test).flatten(), 'real': y_test,'pred':y_pred})
+
 

@@ -49,6 +49,7 @@ def DTprimspecmoments(Tion):
     
     return mean, variance #note: this is returned in MeV!!!
 #%%
+
 '''
 Define the different temperature profiles centered around bang time:
 (need to figure out what to set temperature outside burn time range)
@@ -66,22 +67,36 @@ tmin = 10
 tmax = 10
 
 
+tmin_1=10
+tmax_1=15
+tmin_2=10
 
 
-detectors=[0.1,2]
-number_of_tests=100
+detectors=[0.3, 1]
+number_of_tests=250
+
+t_mid_list=[]
 
 for i in range(number_of_tests):
-    
+    print(i)
 
-    
-    tmin_1=np.random.choice(np.linspace(5,10,16))
+    '''
+    tmin=np.random.choice(np.linspace(5,10,16))
     tmax = np.random.choice(np.linspace(25,35,16))
-    tmin_2=np.random.choice(np.linspace(5,10,16))    
+    #tmin_2=np.random.choice(np.linspace(5,10,16))    
+    '''
+    t_random = np.random.choice([150,160,170,180, 190, 210, 220, 230, 240, 250])
     
+    tmin_1 = np.random.choice(np.linspace(5,10,11))
+    tmax_1= np.random.choice(np.linspace(20,30,11))
+    tmin_2 = np.random.choice(np.linspace(5,10,11))
     
-    max_min.append([tmin_1,tmax,tmin_2])
+    max_min.append([tmin_1,tmax_1,tmin_2])
     #print(tmin_1, tmax, tmin_2)
+    print(t_random)
+    
+    
+    t_mid_list.append(t_random)
     
     
     #linearly increasing temperature from 4.3keV to 15keV over burn time = 100ps
@@ -118,26 +133,32 @@ for i in range(number_of_tests):
             c = y_midpoint - grad * t_0
             return grad * t + c #returns temperature in keV
         
-    def incdec(t, Tmin_1 = tmin_1, Tmax = tmax, Tmin_2 = tmin_2):
-        
+    def incdec(t, Tmin_1 = tmin_1, Tmax = tmax_1, Tmin_2 = tmin_2, tmid=t_random):
+
         #temperatures constant outside burn
-        if t < (t_0 - burn_time/2):
+        min_time = t_0 - burn_time/2
+        max_time = t_0 + burn_time/2
+
+        if t < min_time:
             return Tmin_1
         
-        elif t > (t_0 + burn_time/2):
+        elif t > max_time:
             return Tmin_2
         
         #linear increase of temperature at start of burn
-        elif t > (t_0 - burn_time/2) and t < t_0:
-            grad = (Tmax - Tmin_1) / (burn_time/2)
-            c = Tmax - grad * t_0
+        elif t > min_time and t < tmid:
+            grad = (Tmax - Tmin_1) / (tmid-min_time)
+            c = Tmin_1 - grad * min_time
             return grad * t + c #returns temperature in keV
         
         #linear decrease of temperature in second half of burn
-        elif t < (t_0 + burn_time/2) and t > t_0:
-            grad = (Tmin_2 - Tmax) / (burn_time/2)
-            c = Tmax - grad * t_0
+        elif t < max_time and t > tmid:
+            grad = (Tmin_2 - Tmax) / (max_time-tmid)
+            c = Tmin_2 - grad * max_time
             return grad * t + c #returns temperature in keV    
+        
+        
+        
     #constant temperature profile 
     def const_temp(t, T = temp):
         return T #in keV
@@ -161,6 +182,7 @@ for i in range(number_of_tests):
         
         
     #Define Source function S(E,t)
+
     def S(E, t, T_prof):
         
         E_0, E_var = DTprimspecmoments(T_prof(t)) 
@@ -172,7 +194,9 @@ for i in range(number_of_tests):
         #gaussian in time
         time_gauss = np.exp(-(t - t_0)**2 / (2 * t_std**2))
         
-        return energy_gauss * time_gauss
+        norm = 1 / (2 * np.pi * t_std * E_std)
+        
+        return norm * energy_gauss * time_gauss
 
 
     def generate_source(T_prof):
@@ -220,9 +244,8 @@ for i in range(number_of_tests):
         return Z, E_grid, t_grid
         
 
-
     '''Testing generate source: should plot source function and return the source data'''
-    Z, E_grid, t_grid = generate_source(lininc)
+    Z, E_grid, t_grid = generate_source(incdec)
 
     particles_num = 1000
     
@@ -332,6 +355,8 @@ xxx = np.abs(np.array(pred)-np.array(y_test))
 
 
 df_1= pd.DataFrame(xxx,columns = ['1', '2', '3'])
+
+
 
 error1=np.round(df_1['1'].sum()/len(df_1),2)
 error2=np.round(df_1['2'].sum()/len(df_1),2)
