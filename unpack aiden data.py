@@ -272,7 +272,7 @@ for i in range(len(Z)):
 #creating fig and ax
 fig, ax = plt.subplots(nrows=11, ncols=1)
 fig.set_size_inches(18, 100)
-fig.suptitle('Decreasing Temperature', fontsize = 90)
+#fig.suptitle('Decreasing Temperature', fontsize = 90)
 ax[10].set_xlabel('time of arrival (ps)', fontsize = 70)
 ax[5].set_ylabel('flux', fontsize = 70)
             
@@ -333,7 +333,7 @@ plt.show()
 '''
 
 #Detector positions:
-detector_placements =  np.linspace(0, 1, 11)
+detector_placements =  np.linspace(0, 10, 11)
 
 #Time it arrives at the detector is recorded in this array
 for detector in detector_placements:

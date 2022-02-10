@@ -132,9 +132,9 @@ def S(E, t, T_prof):
     #gaussian in time
     time_gauss = np.exp(-(t - t_0)**2 / (2 * t_std**2))
     
-    norm = 1 / (2 * np.pi * t_std * E_std)
+    #norm = 1 / (2 * np.pi * t_std * E_std)
     
-    return norm * energy_gauss * time_gauss
+    return energy_gauss * time_gauss
 
 
 def generate_source(T_prof):
@@ -209,7 +209,7 @@ plt.ylabel('Temperature (keV)')
 This is multiplied by the pdf distribution to give the number of particles for
 each time and energy
 '''
-particles_num = 2000
+particles_num = 500
 
 
 #Empty arrays to record data:
@@ -368,7 +368,7 @@ plt.ylabel('Normalised Flux')
 #%%
 ''' plotting skewness wrt detector positions'''
 skews=[]
-detectors=np.linspace(0,3,20)
+detectors=[0]#np.linspace(0,3,20)
 
 for detector in detectors:
     time_arrive = []
