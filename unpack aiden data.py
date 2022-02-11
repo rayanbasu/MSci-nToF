@@ -76,6 +76,7 @@ xy00 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy00.dat"
 xy00 = xy00[['time','burn_av_Ti', 'yield_dtBHt/dt']]
 xy00 = xy00.iloc[:,0:].values
 xy00 = np.transpose(xy00)
+xy00[1] = 1e-3 * xy00[1] #converting eV to keV
 xy00[0] = 1e12 * xy00[0] #converting to picoseconds
 
 #ignited hotspot
@@ -84,6 +85,7 @@ xy01 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy01.dat"
 xy01 = xy01[['time','burn_av_Ti', 'yield_dtBHt/dt']]
 xy01 = xy01.iloc[:,0:].values
 xy01 = np.transpose(xy01)
+xy01[1] = 1e-3 * xy01[1] #converting eV to keV
 xy01[0] = 1e12 * xy01[0] #converting to picoseconds
 
 #propagating burn
@@ -92,7 +94,19 @@ xy03 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy03.dat"
 xy03 = xy03[['time','burn_av_Ti', 'yield_dtBHt/dt']]
 xy03 = xy03.iloc[:,0:].values
 xy03 = np.transpose(xy03)
+xy03[1] = 1e-3 * xy03[1] #converting eV to keV
 xy03[0] = 1e12 * xy03[0] #converting to picoseconds
+
+#chop out values for which neutron yield in data is greater than 1e-4 of max value
+dataset = []
+for data in ([xy00, xy01, xy03]):
+    idx = np.where(data[2] > max(data[2])/10000)[0]
+    data = np.transpose(data)
+    dataset.append(data[idx])
+
+xy00 = np.transpose(dataset[0])
+xy01 = np.transpose(dataset[1])
+xy03 = np.transpose(dataset[2])
 
 
 # Returns the mean energy and variance based on Ballabio (Code from Aiden)
@@ -136,7 +150,6 @@ burn_time = 100 #choose burn time of 100ps, take this to be equal to FWHM for no
 t_std = burn_time / 2.35482 #converting FWHM to sigma
 
 
-
 ''' Defining UN-NORMALISED Source function S(E,t):
 Need to also define the temperature profile being used!! (T_prof argument)
 Source is normalised in the generate_source() function
@@ -156,6 +169,8 @@ def S(E, t, regime, index):
     
     #norm = 1 / (np.sqrt(2*np.pi) * E_std)
     
+    #NOTE: have taken out normalisation here cause otherwise doesnt work with aiden data
+    
     return energy_gauss * time_contribution
 
 
@@ -173,7 +188,7 @@ def generate_source(regime):
 
     #define grid parameters
     n_energy, n_time = (150, len(regime[0])) #number of grid points
-    energies = np.linspace(-20, 80, n_energy) #in MeV
+    energies = np.linspace(13, 15, n_energy) #in MeV
     times = regime[0] 
 
 
@@ -202,7 +217,7 @@ def generate_source(regime):
     ax.set_ylabel('time (ps)')
     ax.set_xlabel('energy (Mev)')
     #ax.set_ylim3d(7000,7500) #for xy00
-    ax.set_ylim3d(8000,8500) #for xy01
+    #ax.set_ylim3d(8000,8500) #for xy01
     #ax.set_ylim3d(8850,9100) #for xy03
     #ax.set_zlabel('pdf')
     #ax.set_yticks(np.arange(0,0.125,0.025))
@@ -214,14 +229,13 @@ def generate_source(regime):
     plt.show()
     return Z, E_grid, t_grid
 
-
 #%% Plotting temp against time for different regimes
 
 plt.plot(xy00[0], xy00[1], label='Self-heating')
 plt.plot(xy01[0], xy01[1], label='Ignited Hotspot')
 plt.plot(xy03[0], xy03[1], label='Propagating Burn')
-plt.xlabel('Time (s)')
-plt.ylabel('Burn average Ti')
+plt.xlabel('Time (ps)')
+plt.ylabel('Burn average Ti (keV)')
 plt.legend()
 #plt.xlim(xmin =0.5e-8 ,xmax = 1e-8)
 
@@ -230,10 +244,11 @@ plt.legend()
 plt.plot(xy00[0], xy00[2], label='Self-heating')
 plt.plot(xy01[0], xy01[2], label='Ignited Hotspot')
 plt.plot(xy03[0], xy03[2], label='Propagating Burn')
-plt.xlabel('Time (s)')
-plt.ylabel('Neutron Yield')
+plt.xlabel('Time (ps)')
+plt.ylabel('Neutron Yield (Number)')
 plt.legend()
 #plt.xlim(xmin =0.5e-8 ,xmax = 1e-8)
+
 
 #%%
 
@@ -267,8 +282,7 @@ for i in range(len(Z)):
             #save integer number of particles
             num = Z[i][j]
             number_of_particles = np.append(number_of_particles, num)
-            
-          
+                 
 #creating fig and ax
 fig, ax = plt.subplots(nrows=11, ncols=1)
 fig.set_size_inches(18, 100)
@@ -333,10 +347,12 @@ plt.show()
 '''
 
 #Detector positions:
-detector_placements =  np.linspace(0, 10, 11)
+detector_placements =  np.linspace(0, 1, 11)
 
 #Time it arrives at the detector is recorded in this array
-for detector in detector_placements:
+for j in range(len(detector_placements)):
+    detector = detector_placements[j]
+    print(detector)
     time_arrive = []
     
     for i in range(len(number_of_particles)):
@@ -344,11 +360,11 @@ for detector in detector_placements:
                            / velocities[i] * 1e12) #in ps
     
     #Plotting the number of particles arriving at each time
-    scatter = ax[np.int(detector*10)].scatter(time_arrive,number_of_particles, 
+    scatter = ax[j].scatter(time_arrive,number_of_particles, 
                                               c = energies, cmap = cm.plasma)
 
     #fig.colorbar(scatter, shrink=1, aspect=15)
-    ax[np.int(detector*10)].set_title('detector at ' + np.str(np.around(detector,1))+ 'm',
+    ax[j].set_title('detector at ' + np.str(detector)+ 'm',
                                       fontsize = 30)
     print(skew(time_arrive))
 
@@ -393,7 +409,7 @@ plt.ylabel('Normalised Flux')
 #%%
 ''' plotting skewness wrt detector positions'''
 skews=[]
-detectors= np.linspace(0,3,20)
+detectors= np.linspace(0,3,3)
 
 for detector in detectors:
     print(detector)
