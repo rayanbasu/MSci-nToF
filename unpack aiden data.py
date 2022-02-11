@@ -100,7 +100,7 @@ xy03[0] = 1e12 * xy03[0] #converting to picoseconds
 #chop out values for which neutron yield in data is greater than 1e-4 of max value
 dataset = []
 for data in ([xy00, xy01, xy03]):
-    idx = np.where(data[2] > max(data[2])/10000)[0]
+    idx = np.where(data[2] > max(data[2])/50)[0]
     data = np.transpose(data)
     dataset.append(data[idx])
 
@@ -187,7 +187,7 @@ def generate_source(regime):
     #print(norm)
 
     #define grid parameters
-    n_energy, n_time = (150, len(regime[0])) #number of grid points
+    n_energy, n_time = (100, len(regime[0])) #number of grid points
     energies = np.linspace(13, 15, n_energy) #in MeV
     times = regime[0] 
 
@@ -252,7 +252,10 @@ plt.legend()
 
 #%%
 
-Z, E_grid, t_grid = generate_source(xy01)
+Z, E_grid, t_grid = generate_source(xy00)
+
+#scale Z to make it easier to run THIS IS NOT PERMANENT
+Z /= 1e24
 
 #%%
 
@@ -347,7 +350,7 @@ plt.show()
 '''
 
 #Detector positions:
-detector_placements =  np.linspace(0, 1, 11)
+detector_placements =  np.linspace(0, 5, 11)
 
 #Time it arrives at the detector is recorded in this array
 for j in range(len(detector_placements)):
@@ -367,6 +370,7 @@ for j in range(len(detector_placements)):
     ax[j].set_title('detector at ' + np.str(detector)+ 'm',
                                       fontsize = 30)
     print(skew(time_arrive))
+    
 
 fig.subplots_adjust(right=0.8)
 cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
@@ -409,7 +413,7 @@ plt.ylabel('Normalised Flux')
 #%%
 ''' plotting skewness wrt detector positions'''
 skews=[]
-detectors= np.linspace(0,3,3)
+detectors= [0]#np.linspace(0,5,40)
 
 for detector in detectors:
     print(detector)
@@ -438,12 +442,5 @@ plt.grid()
 #plt.title('Constant Temperature (20 keV)')
 #plt.title('Linearly Decreasing (35 to 1 keV)')
 #plt.xlim(xmax = 2)
-    
-
-#%%
-regime = xy03
-
-plt.plot(regime[0], gaussian(regime[0], regime))
-plt.xlim(xmin =0.5e-8 ,xmax = 1e-8)
 
     
