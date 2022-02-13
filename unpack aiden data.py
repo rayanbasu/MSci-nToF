@@ -413,7 +413,8 @@ plt.ylabel('Normalised Flux')
 #%%
 ''' plotting skewness wrt detector positions'''
 skews=[]
-detectors= [0]#np.linspace(0,5,40)
+detectors = np.linspace(0,1,20)
+detectors = np.append(detectors, [3, 5, 10, 15, 20])
 
 for detector in detectors:
     print(detector)
