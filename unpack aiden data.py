@@ -8,7 +8,7 @@ import scipy as sp
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
-from scipy.stats import skew
+from scipy.stats import skew, kurtosis
 import pandas as pd
 from matplotlib.collections import PolyCollection
 from matplotlib import colors as mcolors
@@ -71,7 +71,7 @@ from matplotlib import colors as mcolors
 '''
 
 #self-heating regime
-xy00 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy00.dat"
+xy00 = pd.read_csv("/Users/rayanbasu/Documents/GitHub/MSci-nToF/xy00.dat"
                    ,header = 0, delimiter='  ', engine='python')
 xy00 = xy00[['time','burn_av_Ti', 'yield_dtBHt/dt']]
 xy00 = xy00.iloc[:,0:].values
@@ -80,7 +80,7 @@ xy00[1] = 1e-3 * xy00[1] #converting eV to keV
 xy00[0] = 1e12 * xy00[0] #converting to picoseconds
 
 #ignited hotspot
-xy01 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy01.dat"
+xy01 = pd.read_csv("/Users/rayanbasu/Documents/GitHub/MSci-nToF/xy01.dat"
                    ,header = 0, delimiter='  ', engine='python')
 xy01 = xy01[['time','burn_av_Ti', 'yield_dtBHt/dt']]
 xy01 = xy01.iloc[:,0:].values
@@ -89,7 +89,7 @@ xy01[1] = 1e-3 * xy01[1] #converting eV to keV
 xy01[0] = 1e12 * xy01[0] #converting to picoseconds
 
 #propagating burn
-xy03 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy03.dat"
+xy03 = pd.read_csv("/Users/rayanbasu/Documents/GitHub/MSci-nToF/xy03.dat"
                    ,header = 0, delimiter='  ', engine='python')
 xy03 = xy03[['time','burn_av_Ti', 'yield_dtBHt/dt']]
 xy03 = xy03.iloc[:,0:].values
@@ -413,6 +413,7 @@ plt.ylabel('Normalised Flux')
 #%%
 ''' plotting skewness wrt detector positions'''
 skews=[]
+kurts=[]
 detectors = np.linspace(0,1,20)
 detectors = np.append(detectors, [3, 5, 10, 15, 20])
 
@@ -434,6 +435,7 @@ for detector in detectors:
     print(skew(skewness))
     #think about use of bias here, does it change much in our results?
     skews.append(skew(skewness))
+    kurts.append(kurtosis(skewness))
 
 
 plt.plot(detectors,skews, 'x')
