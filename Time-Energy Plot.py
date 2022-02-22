@@ -55,7 +55,7 @@ t_std = burn_time / 2.35482 #converting FWHM to sigma
 
 
 #linearly increasing temperature from 4.3keV to 15keV over burn time = 100ps
-def lininc(t, Tmin = 4.3, Tmax = 15):    
+def lininc(t, Tmin = 4.3, Tmax = 20):    
     
     #temperatures constant outside burn
     if t < (t_0 - burn_time/2):
@@ -117,9 +117,6 @@ def const_temp(t, T = 15):
     return T #in keV
 
 
-def var_gaussian(t, ):
-    return
-
 ''' Defining UN-NORMALISED Source function S(E,t):
 Need to also define the temperature profile being used!! (T_prof argument)
 Source is normalised in the generate_source() function
@@ -135,7 +132,7 @@ def S(E, t, T_prof):
     #gaussian in time
     time_gauss = np.exp(-(t - t_0)**2 / (2 * t_std**2))
     
-    #norm = 1 / (2 * np.pi * t_std * E_std)
+    norm = 1 / (2 * np.pi * t_std * E_std)
     
     return energy_gauss * time_gauss
 
@@ -154,7 +151,7 @@ def generate_source(T_prof):
     #define grid parameters
     n_energy, n_time = (200, 400) #number of grid points
     energies = np.linspace(13, 15, n_energy) #in MeV
-    times = np.linspace(0, 420, n_time) #t=100 to t=300
+    times = np.linspace(1, 420, n_time) #t=100 to t=300
 
     #generate grid
     E_grid, t_grid = np.meshgrid(energies, times) 
@@ -178,7 +175,7 @@ def generate_source(T_prof):
     ax.set_xlabel('energy (Mev)')
     #ax.set_zlabel('pdf')
     #ax.set_yticks(np.arange(0,0.125,0.025))
-    ax.azim =- 80
+    ax.azim = 0
     ax.elev = 40
     fig.colorbar(surf, shrink=0.5, aspect=15)
     #plt.title("Linearly Increasing Temperature")
@@ -189,7 +186,8 @@ def generate_source(T_prof):
 #%%
 '''Testing generate_source() function: 
    this should plot the source function and return the source data'''
-Z, E_grid, t_grid = generate_source(lindec)
+Z, E_grid, t_grid = generate_source(lininc)
+
 
 
 #%%
@@ -212,7 +210,7 @@ plt.ylabel('Temperature (keV)')
 This is multiplied by the pdf distribution to give the number of particles for
 each time and energy
 '''
-particles_num = 500
+particles_num = 200
 
 
 #Empty arrays to record data:
@@ -246,15 +244,8 @@ for i in range(len(Z)):
             num = np.round(particles_num  * Z[i][j]) # may have a problem here with rounding
             number_of_particles = np.append(number_of_particles, num)
             
-          
-#creating fig and ax
-fig, ax = plt.subplots(nrows=11, ncols=1)
-fig.set_size_inches(18, 100)
-fig.suptitle('Decreasing Temperature', fontsize = 90)
-ax[10].set_xlabel('time of arrival (ps)', fontsize = 70)
-ax[5].set_ylabel('flux', fontsize = 70)
-            
 ''' Ewan's attempt to plot 3d plots similar to vlad paper (ignore!!!)
+
 
 #detector distances from source (in metres)
 detectors = np.arange(0.02, 100, 10)
@@ -309,12 +300,22 @@ plt.show()
 #need to bin these results so that can show temporal spread !!! (fix)
 
 '''
+#creating fig and ax
+nrows = 5
+fig, ax = plt.subplots(nrows=nrows, ncols=1)
+fig.set_size_inches(18, 70)
+#fig.suptitle('Decreasing Temperature', fontsize = 90)
+ax[nrows - 1].set_xlabel('Time of arrival (ps)', fontsize = 70)
+ax[np.int(nrows/2)].set_ylabel('Flux', fontsize = 70)
+
 
 #Detector positions:
-detector_placements =  np.linspace(0, 1, 11)
+detector_placements =  np.linspace(0, 0.8, nrows)
 
 #Time it arrives at the detector is recorded in this array
-for detector in detector_placements:
+for j in range(len(detector_placements)):
+    detector = detector_placements[j]
+    print(detector)
     time_arrive = []
     
     for i in range(len(number_of_particles)):
@@ -322,13 +323,14 @@ for detector in detector_placements:
                            / velocities[i] * 1e12) #in ps
     
     #Plotting the number of particles arriving at each time
-    scatter = ax[np.int(detector*10)].scatter(time_arrive,number_of_particles, 
+    scatter = ax[j].scatter(time_arrive,number_of_particles, 
                                               c = energies, cmap = cm.plasma)
 
     #fig.colorbar(scatter, shrink=1, aspect=15)
-    ax[np.int(detector*10)].set_title('detector at ' + np.str(np.around(detector,1))+ 'm',
+    ax[j].set_title('detector at ' + np.str(detector)+ 'm',
                                       fontsize = 30)
     print(skew(time_arrive))
+    
 
 fig.subplots_adjust(right=0.8)
 cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
@@ -338,7 +340,8 @@ cbar = fig.colorbar(scatter, aspect=100, cax=cbar_ax)
 cbar.set_label('Energies (MeV)', fontsize = 70, rotation=270)
 #fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc.png', dpi=100)    
 
-#%%
+plt.savefig('demo.png', transparent=True)
+    #%%
 detector = 0
 time_arrive = []
     
