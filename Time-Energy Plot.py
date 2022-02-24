@@ -55,7 +55,7 @@ t_std = burn_time / 2.35482 #converting FWHM to sigma
 
 
 #linearly increasing temperature from 4.3keV to 15keV over burn time = 100ps
-def lininc(t, Tmin = 4.3, Tmax = 20):    
+def lininc(t, Tmin = 4.3, Tmax = 30):    
     
     #temperatures constant outside burn
     if t < (t_0 - burn_time/2):
@@ -171,16 +171,24 @@ def generate_source(T_prof):
     surf = ax.plot_surface(E_grid, t_grid, Z, cmap=cm.coolwarm)
 
     #customise plot
-    ax.set_ylabel('time (ps)')
-    ax.set_xlabel('energy (Mev)')
-    #ax.set_zlabel('pdf')
+    ax.set_ylabel('Time (ps)')
+    ax.set_xlabel('Energy (Mev)')
+    ax.xaxis.labelpad=10
+    ax.set_zlabel('Probability')
     #ax.set_yticks(np.arange(0,0.125,0.025))
-    ax.azim = 0
+    ax.azim = 40
     ax.elev = 40
-    fig.colorbar(surf, shrink=0.5, aspect=15)
+    #fig.colorbar(surf, shrink=0.5, aspect=15, label = 'Probability')
     #plt.title("Linearly Increasing Temperature")
-
+    
+    #for getting rid of z ticks
+    #ax.zaxis.set_ticklabels([])
+    #for line in ax.zaxis.get_ticklines():
+    #    line.set_visible(False)
+        
+        
     plt.show()
+    plt.savefig('source.png', transparent=True)
     return Z, E_grid, t_grid
 
 #%%
@@ -210,7 +218,7 @@ plt.ylabel('Temperature (keV)')
 This is multiplied by the pdf distribution to give the number of particles for
 each time and energy
 '''
-particles_num = 200
+particles_num = 500
 
 
 #Empty arrays to record data:
@@ -338,6 +346,7 @@ cbar_ax.tick_params(labelsize=30)
 
 cbar = fig.colorbar(scatter, aspect=100, cax=cbar_ax)
 cbar.set_label('Energies (MeV)', fontsize = 70, rotation=270)
+
 #fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc.png', dpi=100)    
 
 plt.savefig('demo.png', transparent=True)
