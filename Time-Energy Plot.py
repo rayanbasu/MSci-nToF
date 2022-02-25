@@ -311,7 +311,7 @@ plt.show()
 #creating fig and ax
 nrows = 5
 fig, ax = plt.subplots(nrows=nrows, ncols=1)
-fig.set_size_inches(18, 70)
+fig.set_size_inches(23, 70)
 #fig.suptitle('Decreasing Temperature', fontsize = 90)
 ax[nrows - 1].set_xlabel('Time of arrival (ps)', fontsize = 70)
 ax[np.int(nrows/2)].set_ylabel('Flux', fontsize = 70)
@@ -335,7 +335,7 @@ for j in range(len(detector_placements)):
                                               c = energies, cmap = cm.plasma)
 
     #fig.colorbar(scatter, shrink=1, aspect=15)
-    ax[j].set_title('detector at ' + np.str(detector)+ 'm',
+    ax[j].set_title('detector at ' + np.str(np.round(detector,2))+ 'm',
                                       fontsize = 30)
     print(skew(time_arrive))
     
@@ -345,11 +345,11 @@ cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
 cbar_ax.tick_params(labelsize=30)
 
 cbar = fig.colorbar(scatter, aspect=100, cax=cbar_ax)
-cbar.set_label('Energies (MeV)', fontsize = 70, rotation=270)
+cbar.set_label('Energies (MeV)', fontsize = 70)
 
-#fig.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc.png', dpi=100)    
+#plt.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\demo.png', dpi=100)    
 
-plt.savefig('demo.png', transparent=True)
+fig.savefig('demo1.png', transparent=True)
     #%%
 detector = 0
 time_arrive = []
