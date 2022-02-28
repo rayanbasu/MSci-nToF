@@ -8,14 +8,14 @@ Created on Thu Jan 27 23:48:10 2022
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
-
+from matplotlib import cm
 from scipy.stats import skew
 from scipy.stats import kurtosis
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn import metrics
 from sklearn.model_selection import train_test_split
-
+from scipy.stats import skewnorm
 # Returns the mean energy and variance based on Ballabio (Code from Aiden)
 # Tion in keV
 def DTprimspecmoments(Tion):
@@ -66,33 +66,24 @@ tmin = 10
 tmax = 10
 
 
-tmin_1=10
-tmax_1=15
-tmin_2=10
 
-
-detectors=[0.3]
-number_of_tests=250
-
+detectors=[5,15]
+number_of_tests=1
 
 t_mid_list=[]
-
-for i in range(number_of_tests):
-    print(i)
-
-    '''
-    tmin=np.random.choice(np.linspace(5,10,16))
-    tmax = np.random.choice(np.linspace(25,35,16))
-    #tmin_2=np.random.choice(np.linspace(5,10,16))    
-    '''
-    t_random = np.random.choice([150,160,170,180, 190, 210, 220, 230, 240, 250])
+#for i in range(number_of_tests):
+for i in [160,170,180,190,195,205,210,220,230,240]:
     
-    tmin_1 = np.random.choice(np.linspace(5,10,11))
-    tmax_1= np.random.choice(np.linspace(20,30,11))
-    tmin_2 = np.random.choice(np.linspace(5,10,11))
-    
-    max_min.append([tmin_1,tmax_1, tmin_2])
-    #print(tmin_1, tmax, tmin_2)
+    t_random= i
+
+    tmin_1=10
+    #tmin_1=np.random.choice(np.linspace(25,35,16))
+    tmax_1=40
+    #tmax_1 = np.random.choice(np.linspace(15,30,16))
+    #tmin_2=np.random.choice(np.linspace(25,35,16))    
+    tmin_2=10
+    #t_random = np.random.choice([150,160,170,180, 190, 210, 220, 230, 240, 250])
+
     print(t_random)
     
     
@@ -158,7 +149,6 @@ for i in range(number_of_tests):
             return grad * t + c #returns temperature in keV    
         
         
-        
     #constant temperature profile 
     def const_temp(t, T = temp):
         return T #in keV
@@ -192,37 +182,37 @@ for i in range(number_of_tests):
         energy_gauss = np.exp(-(E - E_0)**2 / (2 * E_std**2))
         
         #gaussian in time
-        time_gauss = np.exp(-(t - t_0)**2 / (2 * t_std**2))
+        time_gauss = skewnorm.pdf(((t-t_0)/t_std), -1)*np.sqrt(2*np.pi)
         
         norm = 1 / (2 * np.pi * t_std * E_std)
         
-        return norm * energy_gauss * time_gauss
+        return  energy_gauss*time_gauss
 
 
     def generate_source(T_prof):
         
         #first calculate the normalisation constant by numerically integrating 
         #over energy and time    
-        norm_integral = sp.integrate.nquad(lambda E, t: S(E, t, T_prof), [[0, 100]
+        '''norm_integral = sp.integrate.nquad(lambda E, t: S(E, t, T_prof), [[0, 100]
                                                                  ,[-np.inf, np.inf]])[0]
-        norm = 1 / (norm_integral)
+        norm = 1 / (norm_integral)'''
 
         #define grid parameters
-        n_energy, n_time = (200, 100) #number of grid points
+        n_energy, n_time = (200, 400) #number of grid points
         energies = np.linspace(13, 15, n_energy) #in MeV
-        times = np.linspace(100, 300, n_time) #t=100 to t=300
-
+        times = np.linspace(0, 400, n_time) #t=100 to t=300
+           
         #generate grid
         E_grid, t_grid = np.meshgrid(energies, times) 
         Z = np.zeros([n_time, n_energy])
-
+           
         #creating data, Z are the values of the pdf
         for i in range(len(Z)):
             for j in range(len(Z[0])):
-                Z[i][j] = S(E_grid[i][j], t_grid[i][j], T_prof)           
-        
+                Z[i][j] = S(E_grid[i][j], t_grid[i][j], T_prof)          
+   
         #normalise the source
-        Z = norm * Z
+        #Z = norm * Z
         '''
         #plot surface
         fig = plt.figure()
@@ -248,7 +238,7 @@ for i in range(number_of_tests):
     '''Testing generate source: should plot source function and return the source data'''
     Z, E_grid, t_grid = generate_source(incdec)
 
-    particles_num = 1000
+    particles_num = 20
     
     
     #Empty arrays to record data:
@@ -298,8 +288,8 @@ for i in range(number_of_tests):
             #print(i)
             for j in range(particles):
                 skewness = np.append(skewness,time_arrive[i])
-        
-        '''plt.figure()
+        '''
+        plt.figure()
         scatter = plt.scatter(time_arrive,number_of_particles/max(number_of_particles),
                            c = energies, cmap = cm.plasma)
     
@@ -307,8 +297,8 @@ for i in range(number_of_tests):
         plt.colorbar(scatter, shrink=1, aspect=15, label = 'Energies (MeV)')
         plt.title('detector at ' + np.str(np.around(detector,3))+ 'm', fontsize = 10)
         plt.xlabel('Time of Arrival (ps)')
-        plt.ylabel('Normalised Flux')'''
-        
+        plt.ylabel('Normalised Flux')
+        '''
 
         skews.append(skew(skewness))
         kurts.append(kurtosis(skewness))
@@ -338,7 +328,7 @@ r'''
 t = np.linspace(0,1000,1000)
 T = np.zeros(len(t))
 for i in range(len(t)):
-    T[i] = incdec(t[i], 10, 30, 10, 180)
+    T[i] = incdec(t[i], 10, 20, 30, 200)
 
 sigma = np.sqrt(DTprimspecmoments(T)[1])
  
@@ -354,9 +344,13 @@ plt.ylabel('Temperature (keV)')#%%
 
 cols= list(range(0,len(detectors)))
 column_string = [str(i) for i in cols]
+diff = []
 
+for col in global_list:
+    print(col)
+    diff.append([col[1]-col[0]])
 
-df_2 = pd.DataFrame(global_list[:number_of_tests],columns= column_string)
+df_2 = pd.DataFrame(global_list,columns= column_string)
 
 labels = []
 
@@ -368,9 +362,8 @@ for i in range(len(t_mid_list)):
         labels.append('Inc')
 
 df_2['label']=labels
-#%%
-
-X_train, X_test, y_train, y_test = train_test_split(df_2[column_string], df_2['label'], test_size=0.2, random_state=42)
+'''
+X_train, X_test, y_train, y_test = train_test_split(diff, df_2['label'], test_size=1)
 
 
 
@@ -382,14 +375,18 @@ logreg.fit(X_train,y_train)
 
 #
 y_pred=logreg.predict(X_test)
+'''
+my_preds=[]
+for i in X_test:
+    print(i[0])
+    if i[0]<0:
+        my_preds.append('Inc')
+    else:
+        my_preds.append('Dec')
 
 
-cnf_matrix = metrics.confusion_matrix(y_test, y_pred)
+print("Accuracy:",metrics.accuracy_score(y_test, my_preds))
+#%%
 
-
-print("Accuracy:",metrics.accuracy_score(y_test, y_pred))
-
-
-predictions=pd.DataFrame({'skew': np.asarray(X_test).flatten(), 'real': y_test,'pred':y_pred})
-
+df_1 = pd.DataFrame(global_list,columns= column_string)
 
