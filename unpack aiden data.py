@@ -61,6 +61,24 @@ xy00 = np.transpose(dataset[0])
 xy01 = np.transpose(dataset[1])
 xy03 = np.transpose(dataset[2])
 
+
+
+#%%
+no_ign = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/NoAlphaHeating.dat"
+                   ,header = 0, delimiter='    ', engine='python')
+#no_ign = xy03[['time','burn_av_Ti', 'yield_dtBHt/dt']]
+#no_ign = xy03.iloc[:,0:].values
+#no_ign = np.transpose(xy03)
+#no_ign[1] = 1e-3 * xy03[1] #converting eV to keV
+#no_ign[0] = 1e12 * xy03[0] #converting to picoseconds
+
+
+
+    
+
+
+
+#%%
 # Returns the mean energy and variance based on Ballabio (Code from Aiden)
 # Tion in keV
 def DTprimspecmoments(Tion):
