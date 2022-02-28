@@ -15,6 +15,7 @@ from matplotlib.collections import PolyCollection
 from matplotlib import colors as mcolors
 from sklearn import linear_model
 from sklearn.model_selection import train_test_split
+from scipy.stats import skewnorm
 
 # Returns the mean energy and variance based on Ballabio (Code from Aiden)
 # Tion in keV
@@ -58,7 +59,8 @@ t_0 = 200 #bang time (in picoseconds)
 burn_time = 100 #choose burn time of 100ps, take this to be equal to FWHM for now 
 t_std = burn_time / 2.35482 #converting FWHM to sigma
 temp = 20
-global_list = []
+global_list_skews = []
+global_list_kurts = []
 max_min = []
 
 up=[]
@@ -67,29 +69,25 @@ tmin = 10
 tmax = 10
 
 
-tmin_1=10
-tmax_1=15
-tmin_2=10
 
-
-detectors=[0.3, 1]
-number_of_tests=250
+detectors=np.linspace(0,1,11)
+number_of_tests=1
+check=[]
 
 t_mid_list=[]
-
 for i in range(number_of_tests):
-    print(i)
+#for i in np.linspace(15,30,6):
+    new_skew= i
 
-    '''
-    tmin=np.random.choice(np.linspace(5,10,16))
-    tmax = np.random.choice(np.linspace(25,35,16))
-    #tmin_2=np.random.choice(np.linspace(5,10,16))    
-    '''
-    t_random = np.random.choice([150,160,170,180, 190, 210, 220, 230, 240, 250])
-    
-    tmin_1 = np.random.choice(np.linspace(5,10,11))
-    tmax_1= np.random.choice(np.linspace(20,30,11))
-    tmin_2 = np.random.choice(np.linspace(5,10,11))
+    tmin_1=10
+    #tmin_1=np.random.choice(np.linspace(25,35,16))
+    tmax_1=30
+    #tmax_1 = np.random.choice(np.linspace(15,30,16))
+    #tmin_2=np.random.choice(np.linspace(25,35,16))    
+    tmin_2=10
+    #t_random = np.random.choice([150,160,170,180, 190, 210, 220, 230, 240, 250])
+    t_random=199.99
+
     
     max_min.append([tmin_1,tmax_1,tmin_2])
     #print(tmin_1, tmax, tmin_2)
@@ -192,25 +190,27 @@ for i in range(number_of_tests):
         energy_gauss = np.exp(-(E - E_0)**2 / (2 * E_std**2))
         
         #gaussian in time
-        time_gauss = np.exp(-(t - t_0)**2 / (2 * t_std**2))
+        #time_gauss = np.exp(-(t - t_0)**2 / (2 * t_std**2))
+
+        time_gauss = skewnorm.pdf(((t-t_0)/t_std), -1)*np.sqrt(2*np.pi)
         
-        norm = 1 / (2 * np.pi * t_std * E_std)
+        norm = 1 / (2 * np.pi * t_std* E_std)
         
-        return norm * energy_gauss * time_gauss
+        return  norm*energy_gauss * time_gauss
 
 
     def generate_source(T_prof):
         
         #first calculate the normalisation constant by numerically integrating 
         #over energy and time    
-        norm_integral = sp.integrate.nquad(lambda E, t: S(E, t, T_prof), [[0, 100]
+        '''norm_integral = sp.integrate.nquad(lambda E, t: S(E, t, T_prof), [[0, 100]
                                                                  ,[-np.inf, np.inf]])[0]
-        norm = 1 / (norm_integral)
+        norm = 1 / (norm_integral)'''
 
         #define grid parameters
         n_energy, n_time = (200, 100) #number of grid points
         energies = np.linspace(13, 15, n_energy) #in MeV
-        times = np.linspace(100, 300, n_time) #t=100 to t=300
+        times = np.linspace(1, 399, n_time) #t=100 to t=300
 
         #generate grid
         E_grid, t_grid = np.meshgrid(energies, times) 
@@ -222,7 +222,7 @@ for i in range(number_of_tests):
                 Z[i][j] = S(E_grid[i][j], t_grid[i][j], T_prof)           
         
         #normalise the source
-        Z = norm * Z
+        #Z = norm * Z
         '''
         #plot surface
         fig = plt.figure()
@@ -247,7 +247,7 @@ for i in range(number_of_tests):
     '''Testing generate source: should plot source function and return the source data'''
     Z, E_grid, t_grid = generate_source(incdec)
 
-    particles_num = 1000
+    particles_num = 2000
     
     
     #Empty arrays to record data:
@@ -297,8 +297,8 @@ for i in range(number_of_tests):
             #print(i)
             for j in range(particles):
                 skewness = np.append(skewness,time_arrive[i])
-        
-        '''plt.figure()
+
+        plt.figure()
         scatter = plt.scatter(time_arrive,number_of_particles/max(number_of_particles),
                            c = energies, cmap = cm.plasma)
     
@@ -306,19 +306,21 @@ for i in range(number_of_tests):
         plt.colorbar(scatter, shrink=1, aspect=15, label = 'Energies (MeV)')
         plt.title('detector at ' + np.str(np.around(detector,3))+ 'm', fontsize = 10)
         plt.xlabel('Time of Arrival (ps)')
-        plt.ylabel('Normalised Flux')'''
-        
+        plt.ylabel('Normalised Flux')
 
+    
         skews.append(skew(skewness))
         kurts.append(kurtosis(skewness))
-    
+        check.append([time_arrive,number_of_particles])
+        
+        
     up.append([skews, kurts])
     
     
-    global_list.append(skews)
+    global_list_skews.append(skews)
+    global_list_kurts.append(kurts)
     
-    
-r'''
+
     plt.figure()
     plt.plot(detectors,skews, 'x')
     plt.plot(detectors, kurts, 'x')
@@ -326,11 +328,20 @@ r'''
     plt.ylabel('Skewness')
     plt.grid()
     #plt.title('Constant Temperature (20 keV)')
-    plt.title(f'Constant Temperature ({temp} keV)')
+    plt.title(f'tmin1: {tmin_1}, tmax: {tmax_1}, tmin2: {tmin_2}')
     #plt.ylim(ymax = 0.5, ymin = 0)
     plt.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc_{}_{}.png'.format(tmax, tmin), dpi=100)
-''' 
 
+#%%
+array_1=[]
+array_2=[]
+for i in range(len(check[0][0])):
+    if check[0][0][i]<150:
+        array_1.append(check[0][1][i])
+    else:
+        array_2.append(check[0][1][i])
+        
+        
 #%%
 
 cols= list(range(0,len(detectors)))
@@ -338,6 +349,8 @@ column_string = [str(i) for i in cols]
 
 
 df = pd.DataFrame(global_list[:number_of_tests],columns= column_string)
+
+df_2 = pd.DataFrame(max_min[:number_of_tests],columns= ['tmin1', 'tmax', 'tmin2'])
 
 X_train, X_test, y_train, y_test = train_test_split(df[column_string], max_min, test_size=0.2, random_state=42)
 
@@ -399,45 +412,17 @@ error3=np.round(df_1['3'].sum()/len(df_1),2)
 
 print(f'absolute error is {error1} for tmin {error2} for tmax and {error3} for tmin_2' )
 
+
 #%%
 
 
-
-co=[2,3,5,8,10]
-
-
-
-pred = np.array([17.07, 6.5, 10.62, 14.49, 14.45])
-
-correct= np.array([13, 7, 8, 14, 12])
-
-
-plt.scatter(co, pred-correct) #100*(pred-correct)/correct)
-plt.grid()
-plt.xlabel('number of detectors')
-plt.ylabel('absolute error')
-plt.ylim(-10,10)
+mean, var, skew, kurt = skewnorm.stats(2, moments='mvsk')
 #%%
+new = []
 
 
-
-
-
-
-err_1=np.array([34.33, 34.44,34.45, 34.46,34.47])
-
-err_2=np.array([40.76, 34.64, 34.63,  34.52, 34.40])
-
-
-
-
-
-plt.scatter(co,(err_2)/35-1)            
-plt.grid()
-plt.xlabel('number of detectors')
-plt.ylabel('percentage error')
-plt.ylim(-1,1)
-#%%
-
-
-
+for i in np.linspace(150,250,20):
+    new.append(skewnorm.cdf(((i-t_0)/t_std), 0))
+               
+plt.plot(np.linspace(150,200,20), new)
+              
