@@ -45,11 +45,11 @@ xy03[0] = 1e12 * xy03[0] #converting to picoseconds
 norm00 = sp.integrate.simps(xy00[2], xy00[0])
 norm01 = sp.integrate.simps(xy01[2], xy01[0])
 norm03 = sp.integrate.simps(xy03[2], xy03[0])
-
+#%%
 xy00[2] = xy00[2] / norm00
 xy01[2] = xy01[2] / norm01
 xy03[2] = xy03[2] / norm03
-
+#%%
 #chop out values for which neutron yield in data is greater than 1e-4 of max value
 dataset = []
 for data in ([xy00, xy01, xy03]):
@@ -69,12 +69,10 @@ no_ign = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/NoAlphaHeating.d
 no_ign = no_ign[['time','burn_av_Ti', 'yield_dtBHt/dt']]
 no_ign = no_ign.iloc[:,0:].values
 no_ign = np.transpose(no_ign)
-no_ign[1] = 1e-3 * xy03[1] #converting eV to keV
-no_ign[0] = 1e12 * xy03[0] #converting to picoseconds
+no_ign[1] = 1e-3 * no_ign[1] #converting eV to keV
+no_ign[0] = 1e12 * no_ign[0] #converting to picoseconds
 
 
-
-    
 
 
 
@@ -215,8 +213,9 @@ plt.legend()
 plt.plot(xy00[0], xy00[2], label='Self-heating')
 plt.plot(xy01[0], xy01[2], label='Ignited Hotspot')
 plt.plot(xy03[0], xy03[2], label='Propagating Burn')
+#plt.plot(no_ign[0], no_ign[2], label='Non-Igniting')
 plt.xlabel('Time (ps)')
-plt.ylabel('Neutron Yield (Number)')
+plt.ylabel('Neutron Yield per unit time (Number)')
 plt.legend()
 #plt.xlim(xmin =0.5e-8 ,xmax = 1e-8)
 
@@ -260,7 +259,7 @@ for i in range(len(Z)):
 #creating fig and ax
 nrows = 5
 fig, ax = plt.subplots(nrows=nrows, ncols=1)
-fig.set_size_inches(18, 100)
+    fig.set_size_inches(18, 100)
 ax[10].set_xlabel('time of arrival (ps)', fontsize = 70)
 ax[5].set_ylabel('flux', fontsize = 70)
             
@@ -419,8 +418,10 @@ plt.ylabel('Skewness')
 plt.grid()
 #plt.title('Constant Temperature (20 keV)')
 #plt.title('Linearly Decreasing (35 to 1 keV)')
-plt.xlim(xmin = 5, xmax = 20)
+plt.xlim(xmin = 0, xmax = 5)
 plt.ylim(ymin = 0, ymax = 0.05)
+plt.savefig('dataskewness.png', transparent=True)
+
 #%%
 
 maxindex = np.unravel_index(Z.argmax(), Z.shape)
@@ -429,8 +430,8 @@ print(t_grid[maxindex])
 #%%
 # Plotting temp against time for different regimes
 
-#plt.plot(xy00[0], xy00[1], label='Self-heating')
-#plt.plot(xy01[0], xy01[1], label='Ignited Hotspot')
+plt.plot(xy00[0], xy00[1], label='Self-heating')
+plt.plot(xy01[0], xy01[1], label='Ignited Hotspot')
 plt.plot(xy03[0], xy03[1], label='Propagating Burn')
 plt.axvline(x=t_grid[maxindex],linestyle='--', label = 'Bang Time', color = 'black')
 plt.xlabel('Time (ps)')
@@ -441,9 +442,7 @@ plt.grid()
 #plt.xlim(xmin =8170 ,xmax = 8200)
 plt.xlim(xmin =9000 ,xmax = 9025)
 
-
-
-
+'''
 #%%
 indexmax = xy03[1].argmax()
 print(indexmax)
@@ -457,20 +456,22 @@ print(indexmax)
 
 bang = xy03[0][indexmax]
 print(bang)
-
+'''
 #%%
 '''kurtosis analysis'''
 plt.plot(detectors,kurts,  label='Self-heating')
 plt.plot(detectors,kurts1,  label='Ignited Hotspot')
 plt.plot(detectors,kurts3,  label='Propagating Burn')
-plt.legend()
 plt.xlabel('detector placement (m)')
+plt.yticks(fontsize= 7.1)
 plt.ylabel('Kurtosis')
 plt.grid()
+plt.legend()
 #plt.title('Constant Temperature (20 keV)')
 #plt.title('Linearly Decreasing (35 to 1 keV)')
 plt.xlim(xmin = 0, xmax = 5)
 #plt.ylim(ymin = 0, ymax = 0.1)
+plt.savefig('kurtosis.png', transparent=True)
 
 
 

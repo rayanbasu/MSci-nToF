@@ -8,7 +8,7 @@ import scipy as sp
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
-from scipy.stats import skew
+from scipy.stats import skew, kurtosis
 import pandas as pd
 from matplotlib.collections import PolyCollection
 from matplotlib import colors as mcolors
@@ -55,7 +55,7 @@ t_std = burn_time / 2.35482 #converting FWHM to sigma
 
 
 #linearly increasing temperature from 4.3keV to 15keV over burn time = 100ps
-def lininc(t, Tmin = 4.3, Tmax = 30):    
+def lininc(t, Tmin = 4.3, Tmax = 20):    
     
     #temperatures constant outside burn
     if t < (t_0 - burn_time/2):
@@ -72,7 +72,7 @@ def lininc(t, Tmin = 4.3, Tmax = 30):
     
     
 #linearly decreasing temperature from 10keV to 1keV over burn time = 100ps.
-def lindec(t, Tmin = 3, Tmax = 10):
+def lindec(t, Tmin = 1, Tmax = 10):
     
     #temperatures constant outside burn
     if t < (t_0 - burn_time/2):
@@ -149,7 +149,7 @@ def generate_source(T_prof):
     #print(norm)
 
     #define grid parameters
-    n_energy, n_time = (200, 400) #number of grid points
+    n_energy, n_time = (200, 300) #number of grid points
     energies = np.linspace(13, 15, n_energy) #in MeV
     times = np.linspace(1, 420, n_time) #t=100 to t=300
 
@@ -178,7 +178,7 @@ def generate_source(T_prof):
     #ax.set_yticks(np.arange(0,0.125,0.025))
     ax.azim = 40
     ax.elev = 40
-    #fig.colorbar(surf, shrink=0.5, aspect=15, label = 'Probability')
+    fig.colorbar(surf, shrink=0.5, aspect=15, label = 'Probability')
     #plt.title("Linearly Increasing Temperature")
     
     #for getting rid of z ticks
@@ -194,7 +194,7 @@ def generate_source(T_prof):
 #%%
 '''Testing generate_source() function: 
    this should plot the source function and return the source data'''
-Z, E_grid, t_grid = generate_source(lininc)
+Z, E_grid, t_grid = generate_source(lindec)
 
 
 
@@ -203,7 +203,7 @@ Z, E_grid, t_grid = generate_source(lininc)
 t = np.linspace(0,1000,1000)
 T = np.zeros(len(t))
 for i in range(len(t)):
-    T[i] = incdec(t[i])
+    T[i] = lindec(t[i])
 
 sigma = np.sqrt(DTprimspecmoments(T)[1])
 
@@ -218,7 +218,7 @@ plt.ylabel('Temperature (keV)')
 This is multiplied by the pdf distribution to give the number of particles for
 each time and energy
 '''
-particles_num = 500
+particles_num = 80
 
 
 #Empty arrays to record data:
@@ -318,7 +318,7 @@ ax[np.int(nrows/2)].set_ylabel('Flux', fontsize = 70)
 
 
 #Detector positions:
-detector_placements =  np.linspace(0, 0.8, nrows)
+detector_placements =  np.linspace(0, 1, nrows)
 
 #Time it arrives at the detector is recorded in this array
 for j in range(len(detector_placements)):
@@ -336,7 +336,7 @@ for j in range(len(detector_placements)):
 
     #fig.colorbar(scatter, shrink=1, aspect=15)
     ax[j].set_title('detector at ' + np.str(np.round(detector,2))+ 'm',
-                                      fontsize = 30)
+                                      fontsize = 60)
     print(skew(time_arrive))
     
 
@@ -350,7 +350,7 @@ cbar.set_label('Energies (MeV)', fontsize = 70)
 #plt.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\demo.png', dpi=100)    
 
 fig.savefig('demo1.png', transparent=True)
-    #%%
+#%%
 detector = 0
 time_arrive = []
     
@@ -383,7 +383,9 @@ plt.ylabel('Normalised Flux')
 #%%
 ''' plotting skewness wrt detector positions'''
 skews=[]
-detectors=[0]#np.linspace(0,3,20)
+kurts=[]
+detectors = np.linspace(0,2,30)
+detectors = np.append(detectors, [3, 5, 10, 15, 20])
 
 for detector in detectors:
     time_arrive = []
@@ -402,12 +404,17 @@ for detector in detectors:
     print(skew(skewness))
     #think about use of bias here, does it change much in our results?
     skews.append(skew(skewness))
+    kurts.append(kurtosis(skewness))
+
+#%%
 
 
 plt.plot(detectors,skews, 'x')
+plt.plot(detectors,skews)
 plt.xlabel('detector placement (m)')
 plt.ylabel('Skewness')
 plt.grid()
 #plt.title('Constant Temperature (20 keV)')
 #plt.title('Linearly Decreasing (35 to 1 keV)')
-#plt.xlim(xmax = 2)
+plt.xlim(xmin=0, xmax = 7.6)
+plt.ylim(ymin =0)
