@@ -65,12 +65,12 @@ xy03 = np.transpose(dataset[2])
 
 #%%
 no_ign = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/NoAlphaHeating.dat"
-                   ,header = 0, delimiter='    ', engine='python')
-#no_ign = xy03[['time','burn_av_Ti', 'yield_dtBHt/dt']]
-#no_ign = xy03.iloc[:,0:].values
-#no_ign = np.transpose(xy03)
-#no_ign[1] = 1e-3 * xy03[1] #converting eV to keV
-#no_ign[0] = 1e12 * xy03[0] #converting to picoseconds
+                   ,header = 0, delimiter='  ', engine='python')
+no_ign = no_ign[['time','burn_av_Ti', 'yield_dtBHt/dt']]
+no_ign = no_ign.iloc[:,0:].values
+no_ign = np.transpose(no_ign)
+no_ign[1] = 1e-3 * xy03[1] #converting eV to keV
+no_ign[0] = 1e12 * xy03[0] #converting to picoseconds
 
 
 
@@ -201,9 +201,10 @@ def generate_source(regime):
 
 #%% Plotting temp against time for different regimes
 
-plt.plot(xy00[0], xy00[1], label='Self-heating')
-plt.plot(xy01[0], xy01[1], label='Ignited Hotspot')
-plt.plot(xy03[0], xy03[1], label='Propagating Burn')
+#plt.plot(xy00[0], xy00[1], label='Self-heating')
+#plt.plot(xy01[0], xy01[1], label='Ignited Hotspot')
+#plt.plot(xy03[0], xy03[1], label='Propagating Burn')
+plt.plot(no_ign[0], no_ign[1], label='Non-Igniting')
 plt.xlabel('Time (ps)')
 plt.ylabel('Burn average Ti (keV)')
 plt.legend()
