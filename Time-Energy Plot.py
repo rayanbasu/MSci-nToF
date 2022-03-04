@@ -46,6 +46,38 @@ def DTprimspecmoments(Tion):
     
     return mean, variance #note: this is returned in MeV!!!
 
+def DDprimspecmoments(Tion):
+# Mean calculation
+    a1 = 4.69515
+    a2 = -0.040729
+    a3 = 0.47
+    a4 = 0.81844
+
+      
+    mean_shift = a1*Tion**(0.6666666666)/(1.0+a2*Tion**a3)+a4*Tion
+    
+    # keV to MeV
+    mean_shift /= 1e3
+    
+    mean = 2.4495 + mean_shift
+    
+    # Variance calculation
+    omega0 = 82.542
+    a1 = 1.7013e-3
+    a2 = 0.16888
+    a3 = 0.49
+a4 = 7.946e-4
+    
+    delta = a1*Tion**(0.6666666666)/(1.0+a2*Tion**a3)+a4*Tion
+    
+    C = omega0*(1+delta)
+    FWHM2 = C**2*Tion
+    variance = FWHM2/(2.35482)**2
+    # keV^2 to MeV^2
+    variance /= 1e6
+    
+    return mean, variance #note: this is returned in MeV!!!
+
 '''
 Define the different temperature profiles centered around bang time:
 '''
