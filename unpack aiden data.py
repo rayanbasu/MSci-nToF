@@ -53,15 +53,13 @@ xy03[2] = xy03[2] / norm03
 #chop out values for which neutron yield in data is greater than 1e-4 of max value
 dataset = []
 for data in ([xy00, xy01, xy03]):
-    idx = np.where(data[2] > max(data[2])/50)[0]
+    idx = np.where(data[2] > max(data[2])/1000000)[0]
     data = np.transpose(data)
     dataset.append(data[idx])
 
 xy00 = np.transpose(dataset[0])
 xy01 = np.transpose(dataset[1])
 xy03 = np.transpose(dataset[2])
-
-
 
 #%%
 no_ign = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/NoAlphaHeating.dat"
@@ -71,8 +69,6 @@ no_ign = no_ign.iloc[:,0:].values
 no_ign = np.transpose(no_ign)
 no_ign[1] = 1e-3 * no_ign[1] #converting eV to keV
 no_ign[0] = 1e12 * no_ign[0] #converting to picoseconds
-
-
 
 
 
@@ -199,14 +195,16 @@ def generate_source(regime):
 
 #%% Plotting temp against time for different regimes
 
-#plt.plot(xy00[0], xy00[1], label='Self-heating')
-#plt.plot(xy01[0], xy01[1], label='Ignited Hotspot')
-#plt.plot(xy03[0], xy03[1], label='Propagating Burn')
-plt.plot(no_ign[0], no_ign[1], label='Non-Igniting')
+plt.plot(xy00[0], xy00[1], label='Self-heating')
+plt.plot(xy01[0], xy01[1], label='Ignited Hotspot')
+plt.plot(xy03[0], xy03[1], label='Propagating Burn')
+#plt.plot(no_ign[0], no_ign[1], label='Non-Igniting')
 plt.xlabel('Time (ps)')
 plt.ylabel('Burn average Ti (keV)')
 plt.legend()
-#plt.xlim(xmin =0.5e-8 ,xmax = 1e-8)
+plt.grid()
+plt.xlim(xmin =6000 ,xmax = 10000)
+plt.savefig('temps.png', transparent=True)
 
 #%% Plotting neutron yield against time for different regimes
 
@@ -215,9 +213,11 @@ plt.plot(xy01[0], xy01[2], label='Ignited Hotspot')
 plt.plot(xy03[0], xy03[2], label='Propagating Burn')
 #plt.plot(no_ign[0], no_ign[2], label='Non-Igniting')
 plt.xlabel('Time (ps)')
-plt.ylabel('Neutron Yield per unit time (Number)')
+plt.ylabel('Neutron Yield per unit time')
 plt.legend()
-#plt.xlim(xmin =0.5e-8 ,xmax = 1e-8)
+plt.grid()
+plt.xlim(xmin =7000 ,xmax = 9500)
+plt.savefig('yield.png', transparent=True)
 
 
 #%%
@@ -463,8 +463,8 @@ plt.plot(detectors,kurts,  label='Self-heating')
 plt.plot(detectors,kurts1,  label='Ignited Hotspot')
 plt.plot(detectors,kurts3,  label='Propagating Burn')
 plt.xlabel('detector placement (m)')
-plt.yticks(fontsize= 7.1)
-plt.ylabel('Kurtosis')
+plt.yticks(fontsize= 6.6)
+plt.ylabel('Kurtosis', fontsize = 9)
 plt.grid()
 plt.legend()
 #plt.title('Constant Temperature (20 keV)')
