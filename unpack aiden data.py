@@ -20,8 +20,6 @@ xy00 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy00.dat"
 xy00 = xy00[['time','burn_av_Ti', 'yield_dtBHt/dt']]
 xy00 = xy00.iloc[:,0:].values
 xy00 = np.transpose(xy00)
-xy00[1] = 1e-3 * xy00[1] #converting eV to keV
-xy00[0] = 1e12 * xy00[0] #converting to picoseconds
 
 #ignited hotspot
 xy01 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy01.dat"
@@ -29,8 +27,6 @@ xy01 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy01.dat"
 xy01 = xy01[['time','burn_av_Ti', 'yield_dtBHt/dt']]
 xy01 = xy01.iloc[:,0:].values
 xy01 = np.transpose(xy01)
-xy01[1] = 1e-3 * xy01[1] #converting eV to keV
-xy01[0] = 1e12 * xy01[0] #converting to picoseconds
 
 #propagating burn
 xy03 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy03.dat"
@@ -38,37 +34,49 @@ xy03 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy03.dat"
 xy03 = xy03[['time','burn_av_Ti', 'yield_dtBHt/dt']]
 xy03 = xy03.iloc[:,0:].values
 xy03 = np.transpose(xy03)
-xy03[1] = 1e-3 * xy03[1] #converting eV to keV
-xy03[0] = 1e12 * xy03[0] #converting to picoseconds
+
+
+no_ign = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/NoAlphaHeating.dat"
+                   ,header = 0, delimiter='  ', engine='python')
+no_ign = no_ign[['time','burn_av_Ti', 'yield_dtBHt/dt']]
+no_ign = no_ign.iloc[:,0:].values
+no_ign = np.transpose(no_ign)
+
+
 
 # integrate the yield against time to obtain the constants of normalisation 
-norm00 = sp.integrate.simps(xy00[2], xy00[0])
+norm00 = sp.integrate.simps(xy00[2], xy00[0]) #norm = yield
 norm01 = sp.integrate.simps(xy01[2], xy01[0])
 norm03 = sp.integrate.simps(xy03[2], xy03[0])
-#%%
+normign = sp.integrate.simps(no_ign[2], no_ign[0])
+
+
+xy00[1] = 1e-3 * xy00[1] #converting eV to keV
+xy00[0] = 1e12 * xy00[0] #converting to picoseconds
+xy01[1] = 1e-3 * xy01[1] #converting eV to keV
+xy01[0] = 1e12 * xy01[0] #converting to picoseconds
+xy03[1] = 1e-3 * xy03[1] #converting eV to keV
+xy03[0] = 1e12 * xy03[0] #converting to picoseconds
+no_ign[1] = 1e-3 * no_ign[1] #converting eV to keV
+no_ign[0] = 1e12 * no_ign[0] #converting to picoseconds
+
+#normalising
 xy00[2] = xy00[2] / norm00
 xy01[2] = xy01[2] / norm01
 xy03[2] = xy03[2] / norm03
-#%%
+no_ign[2] = no_ign[2] / normign
+
 #chop out values for which neutron yield in data is greater than 1e-4 of max value
 dataset = []
-for data in ([xy00, xy01, xy03]):
-    idx = np.where(data[2] > max(data[2])/1000000)[0]
+for data in ([xy00, xy01, xy03, no_ign]):
+    idx = np.where(data[2] > max(data[2])/50)[0]
     data = np.transpose(data)
     dataset.append(data[idx])
 
 xy00 = np.transpose(dataset[0])
 xy01 = np.transpose(dataset[1])
 xy03 = np.transpose(dataset[2])
-
-#%%
-no_ign = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/NoAlphaHeating.dat"
-                   ,header = 0, delimiter='  ', engine='python')
-no_ign = no_ign[['time','burn_av_Ti', 'yield_dtBHt/dt']]
-no_ign = no_ign.iloc[:,0:].values
-no_ign = np.transpose(no_ign)
-no_ign[1] = 1e-3 * no_ign[1] #converting eV to keV
-no_ign[0] = 1e12 * no_ign[0] #converting to picoseconds
+no_ign = np.transpose(dataset[3])
 
 
 
@@ -198,7 +206,7 @@ def generate_source(regime):
 plt.plot(xy00[0], xy00[1], label='Self-heating')
 plt.plot(xy01[0], xy01[1], label='Ignited Hotspot')
 plt.plot(xy03[0], xy03[1], label='Propagating Burn')
-#plt.plot(no_ign[0], no_ign[1], label='Non-Igniting')
+plt.plot(no_ign[0], no_ign[1], label='Non-Igniting')
 plt.xlabel('Time (ps)')
 plt.ylabel('Burn average Ti (keV)')
 plt.legend()
@@ -211,7 +219,7 @@ plt.savefig('temps.png', transparent=True)
 plt.plot(xy00[0], xy00[2], label='Self-heating')
 plt.plot(xy01[0], xy01[2], label='Ignited Hotspot')
 plt.plot(xy03[0], xy03[2], label='Propagating Burn')
-#plt.plot(no_ign[0], no_ign[2], label='Non-Igniting')
+plt.plot(no_ign[0], no_ign[2], label='Non-Igniting')
 plt.xlabel('Time (ps)')
 plt.ylabel('Neutron Yield per unit time')
 plt.legend()
@@ -222,7 +230,7 @@ plt.savefig('yield.png', transparent=True)
 
 #%%
 
-Z, E_grid, t_grid = generate_source(xy03)
+Z, E_grid, t_grid = generate_source(xy01)
 
 #%%
 source_yield = 100
@@ -256,12 +264,6 @@ for i in range(len(Z)):
             num = Z[i][j]
             number_of_particles = np.append(number_of_particles, num)
                  
-#creating fig and ax
-nrows = 5
-fig, ax = plt.subplots(nrows=nrows, ncols=1)
-    fig.set_size_inches(18, 100)
-ax[10].set_xlabel('time of arrival (ps)', fontsize = 70)
-ax[5].set_ylabel('flux', fontsize = 70)
             
 ''' Ewan's attempt to plot 3d plots similar to vlad paper (ignore!!!)
 
@@ -319,8 +321,17 @@ plt.show()
 
 '''
 
+#creating fig and ax
+nrows = 5
+fig, ax = plt.subplots(nrows=nrows, ncols=1)
+fig.set_size_inches(23, 70)
+#fig.suptitle('Decreasing Temperature', fontsize = 90)
+ax[nrows - 1].set_xlabel('Time of arrival (ps)', fontsize = 70)
+ax[np.int(nrows/2)].set_ylabel('Flux', fontsize = 70)
+
+
 #Detector positions:
-detector_placements =  np.linspace(0, 5, 11)
+detector_placements =  np.linspace(0, 1, nrows)
 
 #Time it arrives at the detector is recorded in this array
 for j in range(len(detector_placements)):
