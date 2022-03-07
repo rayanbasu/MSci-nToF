@@ -79,8 +79,6 @@ xy03 = np.transpose(dataset[2])
 no_ign = np.transpose(dataset[3])
 
 
-
-#%%
 # Returns the mean energy and variance based on Ballabio (Code from Aiden)
 # Tion in keV
 def DTprimspecmoments(Tion):
@@ -230,10 +228,10 @@ plt.savefig('yield.png', transparent=True)
 
 #%%
 
-Z, E_grid, t_grid = generate_source(xy01)
+Z, E_grid, t_grid = generate_source(no_ign)
 
 #%%
-source_yield = 100
+source_yield = 50
 Z = source_yield * Z
 
 
