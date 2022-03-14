@@ -35,7 +35,7 @@ xy03 = xy03[['time','burn_av_Ti', 'yield_dtBHt/dt']]
 xy03 = xy03.iloc[:,0:].values
 xy03 = np.transpose(xy03)
 
-
+#non-igniting dataset
 no_ign = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/NoAlphaHeating.dat"
                    ,header = 0, delimiter='  ', engine='python')
 no_ign = no_ign[['time','burn_av_Ti', 'yield_dtBHt/dt']]
@@ -43,14 +43,14 @@ no_ign = no_ign.iloc[:,0:].values
 no_ign = np.transpose(no_ign)
 
 
-
+#%%
 # integrate the yield against time to obtain the constants of normalisation 
 norm00 = sp.integrate.simps(xy00[2], xy00[0]) #norm = yield
 norm01 = sp.integrate.simps(xy01[2], xy01[0])
 norm03 = sp.integrate.simps(xy03[2], xy03[0])
 normign = sp.integrate.simps(no_ign[2], no_ign[0])
 
-
+#%%
 xy00[1] = 1e-3 * xy00[1] #converting eV to keV
 xy00[0] = 1e12 * xy00[0] #converting to picoseconds
 xy01[1] = 1e-3 * xy01[1] #converting eV to keV
@@ -59,12 +59,13 @@ xy03[1] = 1e-3 * xy03[1] #converting eV to keV
 xy03[0] = 1e12 * xy03[0] #converting to picoseconds
 no_ign[1] = 1e-3 * no_ign[1] #converting eV to keV
 no_ign[0] = 1e12 * no_ign[0] #converting to picoseconds
-
+#%%
 #normalising
 xy00[2] = xy00[2] / norm00
 xy01[2] = xy01[2] / norm01
 xy03[2] = xy03[2] / norm03
 no_ign[2] = no_ign[2] / normign
+#%%
 
 #chop out values for which neutron yield in data is greater than 1e-4 of max value
 dataset = []
@@ -141,7 +142,7 @@ def S(E, t, regime, index):
     
     #NOTE: have taken out normalisation here cause otherwise doesnt work with aiden data
     
-    return norm * energy_gauss * time_contribution #units: probability/time
+    return norm * energy_gauss * time_contribution #units: probability/(time * energy)
 
 
 #only for existing dataset (should already be normalised)
@@ -417,9 +418,9 @@ for detector in detectors:
 #%%
 '''skewness analysis'''
 plt.plot(detectors,skews, label='Self-heating')
-plt.plot(detectors,skews1,  label='Ignited Hotspot')
-plt.plot(detectors,skews3,  label='Propagating Burn')
-plt.plot(detectors,ign_skews,  label='Non-Igniting')
+#plt.plot(detectors,skews1,  label='Ignited Hotspot')
+#plt.plot(detectors,skews3,  label='Propagating Burn')
+#plt.plot(detectors,ign_skews,  label='Non-Igniting')
 plt.legend()
 plt.xlabel('detector placement (m)')
 plt.ylabel('Skewness')
@@ -469,9 +470,9 @@ print(bang)
 #%%
 '''kurtosis analysis'''
 plt.plot(detectors,kurts, label='Self-heating')
-plt.plot(detectors,kurts1,  label='Ignited Hotspot')
-plt.plot(detectors,kurts3,  label='Propagating Burn')
-plt.plot(detectors,ign_kurts, label='Non-Igniting')
+#plt.plot(detectors,kurts1,  label='Ignited Hotspot')
+#plt.plot(detectors,kurts3,  label='Propagating Burn')
+#plt.plot(detectors,ign_kurts, label='Non-Igniting')
 plt.xlabel('detector placement (m)')
 plt.yticks(fontsize= 6.6)
 plt.ylabel('Kurtosis', fontsize = 9)
