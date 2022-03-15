@@ -42,6 +42,47 @@ no_ign = no_ign[['time','burn_av_Ti', 'yield_dtBHt/dt']]
 no_ign = no_ign.iloc[:,0:].values
 no_ign = np.transpose(no_ign)
 
+#s=0.9
+s09 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/s=0.9.dat"
+                   ,header = 0, delimiter=' ', engine='python')
+s09 = s09[['time','burn_av_Ti', 'yield_dtBHt/dt']]
+s09 = s09.iloc[:,0:].values
+s09 = np.transpose(s09)
+
+#s=1.0
+s10 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/s=1.0.dat"
+                   ,header = 0, delimiter=' ', engine='python')
+s10 = s10[['time','burn_av_Ti', 'yield_dtBHt/dt']]
+s10 = s10.iloc[:,0:].values
+s10 = np.transpose(s10)
+
+#s=1.1
+s11 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/s=1.1.dat"
+                   ,header = 0, delimiter=' ', engine='python')
+s11 = s11[['time','burn_av_Ti', 'yield_dtBHt/dt']]
+s11 = s11.iloc[:,0:].values
+s11 = np.transpose(s11)
+
+#s=1.2
+s12 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/s=1.2.dat"
+                   ,header = 0, delimiter=' ', engine='python')
+s12 = s12[['time','burn_av_Ti', 'yield_dtBHt/dt']]
+s12 = s12.iloc[:,0:].values
+s12 = np.transpose(s12)
+
+#s=1.3
+s13 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/s=1.3.dat"
+                   ,header = 0, delimiter=' ', engine='python')
+s13 = s13[['time','burn_av_Ti', 'yield_dtBHt/dt']]
+s13 = s13.iloc[:,0:].values
+s13 = np.transpose(s13)
+
+#s=1.4
+s14 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/s=1.4.dat"
+                   ,header = 0, delimiter=' ', engine='python')
+s14 = s14[['time','burn_av_Ti', 'yield_dtBHt/dt']]
+s14 = s14.iloc[:,0:].values
+s14 = np.transpose(s14)
 
 #%%
 # integrate the yield against time to obtain the constants of normalisation 
@@ -59,6 +100,7 @@ xy03[1] = 1e-3 * xy03[1] #converting eV to keV
 xy03[0] = 1e12 * xy03[0] #converting to picoseconds
 no_ign[1] = 1e-3 * no_ign[1] #converting eV to keV
 no_ign[0] = 1e12 * no_ign[0] #converting to picoseconds
+
 #%%
 #normalising
 xy00[2] = xy00[2] / norm00
@@ -202,28 +244,42 @@ def generate_source(regime):
 
 #%% Plotting temp against time for different regimes
 
-plt.plot(xy00[0], xy00[1], label='Self-heating')
-plt.plot(xy01[0], xy01[1], label='Ignited Hotspot')
-plt.plot(xy03[0], xy03[1], label='Propagating Burn')
+#plt.plot(xy00[0], xy00[1], label='Self-heating')
+#plt.plot(xy01[0], xy01[1], label='Ignited Hotspot')
+#plt.plot(xy03[0], xy03[1], label='Propagating Burn')
 plt.plot(no_ign[0], no_ign[1], label='Non-Igniting')
+plt.plot(s09[0], s09[1], label='s=0.9')
+plt.plot(s10[0], s10[1], label='s=1.0')
+plt.plot(s11[0], s11[1], label='s=1.1')
+plt.plot(s12[0], s12[1], label='s=1.2')
+plt.plot(s13[0], s13[1], label='s=1.3')
+plt.plot(s14[0], s14[1], label='s=1.4')
 plt.xlabel('Time (ps)')
 plt.ylabel('Burn average Ti (keV)')
 plt.legend()
 plt.grid()
-plt.xlim(xmin =6000 ,xmax = 10000)
+#plt.xlim(xmin =6000 ,xmax = 10000)
+plt.xlim(xmin =0.6e-8 ,xmax = 1.4e-8)
 plt.savefig('temps.png', transparent=True)
 
 #%% Plotting neutron yield against time for different regimes
 
-plt.plot(xy00[0], xy00[2], label='Self-heating')
-plt.plot(xy01[0], xy01[2], label='Ignited Hotspot')
-plt.plot(xy03[0], xy03[2], label='Propagating Burn')
-plt.plot(no_ign[0], no_ign[2], label='Non-Igniting')
+#plt.plot(xy00[0], xy00[2], label='Self-heating')
+#plt.plot(xy01[0], xy01[2], label='Ignited Hotspot')
+#plt.plot(xy03[0], xy03[2], label='Propagating Burn')
+#plt.plot(no_ign[0], no_ign[2], label='Non-Igniting')
+plt.plot(s09[0], s09[2], label='s=0.9')
+plt.plot(s10[0], s10[2], label='s=1.0')
+plt.plot(s11[0], s11[2], label='s=1.1')
+plt.plot(s12[0], s12[2], label='s=1.2')
+plt.plot(s13[0], s13[2], label='s=1.3')
+plt.plot(s14[0], s14[2], label='s=1.4')
 plt.xlabel('Time (ps)')
 plt.ylabel('Neutron Yield per unit time')
 plt.legend()
 plt.grid()
 #plt.xlim(xmin =7000 ,xmax = 9500)
+plt.xlim(xmin =0.9e-8 ,xmax = 1.4e-8)
 plt.savefig('yield.png', transparent=True)
 
 
