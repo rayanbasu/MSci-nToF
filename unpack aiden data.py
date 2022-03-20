@@ -84,6 +84,15 @@ s14 = s14[['time','burn_av_Ti', 'yield_dtBHt/dt']]
 s14 = s14.iloc[:,0:].values
 s14 = np.transpose(s14)
 
+#normalise sacale factor curves 
+s09[0] = (s09[0] - 8.16069345e-09)/0.9
+s10[0] = (s10[0] - 9.10059761e-09)
+s11[0] = (s11[0] - 1.01403463e-08)/1.1
+s12[0] = (s12[0] - 1.11401e-08)/1.2
+s13[0] = (s13[0] - 1.218e-08)/1.3
+s14[0] = (s14[0] - 1.32803e-08)/1.4
+
+
 #%%
 # integrate the yield against time to obtain the constants of normalisation 
 norm00 = sp.integrate.simps(xy00[2], xy00[0]) #norm = yield
@@ -91,15 +100,13 @@ norm01 = sp.integrate.simps(xy01[2], xy01[0])
 norm03 = sp.integrate.simps(xy03[2], xy03[0])
 normign = sp.integrate.simps(no_ign[2], no_ign[0])
 
+
 #%%
-xy00[1] = 1e-3 * xy00[1] #converting eV to keV
-xy00[0] = 1e12 * xy00[0] #converting to picoseconds
-xy01[1] = 1e-3 * xy01[1] #converting eV to keV
-xy01[0] = 1e12 * xy01[0] #converting to picoseconds
-xy03[1] = 1e-3 * xy03[1] #converting eV to keV
-xy03[0] = 1e12 * xy03[0] #converting to picoseconds
-no_ign[1] = 1e-3 * no_ign[1] #converting eV to keV
-no_ign[0] = 1e12 * no_ign[0] #converting to picoseconds
+for data in ([xy00, xy01, xy03, no_ign, s09, s10, s11, s12, s13, s14]):
+    data[1] = 1e-3 * data[1] #converting eV to keV
+    data[0] = 1e12 * data[0] #converting to picoseconds
+
+
 
 #%%
 #normalising
@@ -247,20 +254,21 @@ def generate_source(regime):
 #plt.plot(xy00[0], xy00[1], label='Self-heating')
 #plt.plot(xy01[0], xy01[1], label='Ignited Hotspot')
 #plt.plot(xy03[0], xy03[1], label='Propagating Burn')
-plt.plot(no_ign[0], no_ign[1], label='Non-Igniting')
+#plt.plot(no_ign[0], no_ign[1], label='Non-Igniting')
 plt.plot(s09[0], s09[1], label='s=0.9')
 plt.plot(s10[0], s10[1], label='s=1.0')
 plt.plot(s11[0], s11[1], label='s=1.1')
 plt.plot(s12[0], s12[1], label='s=1.2')
 plt.plot(s13[0], s13[1], label='s=1.3')
 plt.plot(s14[0], s14[1], label='s=1.4')
-plt.xlabel('Time (ps)')
+#plt.xlabel('Time (ps)')
+plt.xlabel('Time, (t-t_o)/S (ps)')
 plt.ylabel('Burn average Ti (keV)')
 plt.legend()
 plt.grid()
 #plt.xlim(xmin =6000 ,xmax = 10000)
-plt.xlim(xmin =0.6e-8 ,xmax = 1.4e-8)
-plt.savefig('temps.png', transparent=True)
+plt.xlim(xmin =-100 ,xmax =300)
+plt.savefig('temps.png')#, transparent=True)
 
 #%% Plotting neutron yield against time for different regimes
 
@@ -273,17 +281,19 @@ plt.plot(s10[0], s10[2], label='s=1.0')
 plt.plot(s11[0], s11[2], label='s=1.1')
 plt.plot(s12[0], s12[2], label='s=1.2')
 plt.plot(s13[0], s13[2], label='s=1.3')
-plt.plot(s14[0], s14[2], label='s=1.4')
-plt.xlabel('Time (ps)')
+plt.plot(s14[0], s14[2],  label='s=1.4')
+#plt.xlabel('Time (ps)')
+plt.xlabel('Time, (t-t_o)/S (ps)')
 plt.ylabel('Neutron Yield per unit time')
 plt.legend()
+plt.yscale('log')
 plt.grid()
-#plt.xlim(xmin =7000 ,xmax = 9500)
-plt.xlim(xmin =0.9e-8 ,xmax = 1.4e-8)
-plt.savefig('yield.png', transparent=True)
+plt.ylim(ymin =1e20 ,ymax = 1e30)
+plt.xlim(xmin =-100 ,xmax =300)
+plt.savefig('yield.png')#, transparent=True)
 
 
-#%%
+0        #%%
 Z, E_grid, t_grid = generate_source(no_ign)
 
 source_yield = 100
