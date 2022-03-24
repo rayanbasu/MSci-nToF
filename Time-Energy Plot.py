@@ -66,7 +66,7 @@ def DDprimspecmoments(Tion):
     a1 = 1.7013e-3
     a2 = 0.16888
     a3 = 0.49
-a4 = 7.946e-4
+    a4 = 7.946e-4
     
     delta = a1*Tion**(0.6666666666)/(1.0+a2*Tion**a3)+a4*Tion
     
@@ -206,27 +206,27 @@ def generate_source(T_prof):
     ax.set_ylabel('Time (ps)')
     ax.set_xlabel('Energy (Mev)')
     ax.xaxis.labelpad=10
-    ax.set_zlabel('Probability')
+    #ax.set_zlabel('Probability')
     #ax.set_yticks(np.arange(0,0.125,0.025))
-    ax.azim = 40
-    ax.elev = 40
+    ax.azim = 0
+    ax.elev = 90
     fig.colorbar(surf, shrink=0.5, aspect=15, label = 'Probability')
     #plt.title("Linearly Increasing Temperature")
     
     #for getting rid of z ticks
-    #ax.zaxis.set_ticklabels([])
-    #for line in ax.zaxis.get_ticklines():
-    #    line.set_visible(False)
+    ax.zaxis.set_ticklabels([])
+    for line in ax.zaxis.get_ticklines():
+        line.set_visible(False)
         
         
     plt.show()
-    plt.savefig('source.png', transparent=True)
+    plt.savefig('source.png', transparent=True)#, bbox_inches='tight')
     return Z, E_grid, t_grid
 
 #%%
 '''Testing generate_source() function: 
    this should plot the source function and return the source data'''
-Z, E_grid, t_grid = generate_source(lindec)
+Z, E_grid, t_grid = generate_source(const_temp)
 
 
 
@@ -250,7 +250,7 @@ plt.ylabel('Temperature (keV)')
 This is multiplied by the pdf distribution to give the number of particles for
 each time and energy
 '''
-particles_num = 80
+particles_num = 100
 
 
 #Empty arrays to record data:
@@ -341,7 +341,7 @@ plt.show()
 
 '''
 #creating fig and ax
-nrows = 5
+nrows = 8
 fig, ax = plt.subplots(nrows=nrows, ncols=1)
 fig.set_size_inches(23, 70)
 #fig.suptitle('Decreasing Temperature', fontsize = 90)
@@ -381,7 +381,7 @@ cbar.set_label('Energies (MeV)', fontsize = 70)
 
 #plt.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\demo.png', dpi=100)    
 
-fig.savefig('demo1.png', transparent=True)
+fig.savefig('demo1.png', transparent=False, dpi = 800)
 #%%
 detector = 0
 time_arrive = []
@@ -446,19 +446,19 @@ skews = [-0.11712961178649432, 0.0011174611083074792, 0.21494346298230504, 0.364
 detectors = np.linspace(0,2,30)
 detectors = np.append(detectors, [3, 5, 10, 15, 20])
 
-
+#%%
 plt.plot(detectors,skews, label = 'Linearly Increasing')
-plt.plot(detectors,skews1, label='Linearly Decreasing')
+#plt.plot(detectors,skews1, label='Linearly Decreasing')
 plt.xlabel('detector placement (m)')
 plt.ylabel('Skewness')
-plt.yticks(fontsize= 8)
+#plt.yticks(fontsize= 8)
 plt.grid()
 plt.legend()
 #plt.title('Constant Temperature (20 keV)')
 #plt.title('Linearly Decreasing (35 to 1 keV)')
 plt.xlim(xmin=0, xmax = 7.6)
 #plt.ylim(ymin =0)
-plt.savefig('skews.png', transparent=True)
+plt.savefig('skews.png', transparent=True, dpi = 800, bbox_inches='tight')
 
 
 #%%
@@ -475,7 +475,7 @@ detectors = np.append(detectors, [3, 5, 10, 15, 20])
 plt.plot(detectors,kurts,  label='Linearly Increasing')
 plt.plot(detectors,kurts1,  label='Linearly Decreasing')
 plt.xlabel('detector placement (m)')
-plt.yticks(fontsize= 7.1)
+#plt.yticks(fontsize= 7.1)
 plt.ylabel('Kurtosis')
 plt.grid()
 plt.legend()
@@ -483,4 +483,4 @@ plt.legend()
 #plt.title('Linearly Decreasing (35 to 1 keV)')
 plt.xlim(xmin = 0, xmax = 5)
 #plt.ylim(ymin = 0, ymax = 0.1)
-plt.savefig('kurtosis.png', transparent=True)
+plt.savefig('kurtosis.png', transparent=True, dpi= 800, bbox_inches='tight')

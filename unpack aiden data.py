@@ -9,10 +9,11 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from scipy.stats import skew, kurtosis
-
 import pandas as pd
 from matplotlib.collections import PolyCollection
 from matplotlib import colors as mcolors
+import os
+import glob
 
 #self-heating regime
 xy00 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/xy00.dat"
@@ -44,90 +45,76 @@ no_ign = np.transpose(no_ign)
 
 #s=0.9
 s09 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/s=0.9.dat"
-                   ,header = 0, delimiter=' ', engine='python')
-s09 = s09[['time','burn_av_Ti', 'yield_dtBHt/dt']]
+                   ,header = None, delimiter=' ', engine='python')
 s09 = s09.iloc[:,0:].values
-s09 = np.transpose(s09)
 
 #s=1.0
 s10 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/s=1.0.dat"
-                   ,header = 0, delimiter=' ', engine='python')
-s10 = s10[['time','burn_av_Ti', 'yield_dtBHt/dt']]
+                   ,header = None, delimiter=' ', engine='python')
 s10 = s10.iloc[:,0:].values
-s10 = np.transpose(s10)
 
 #s=1.1
 s11 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/s=1.1.dat"
-                   ,header = 0, delimiter=' ', engine='python')
-s11 = s11[['time','burn_av_Ti', 'yield_dtBHt/dt']]
+                   ,header = None, delimiter=' ', engine='python')
 s11 = s11.iloc[:,0:].values
-s11 = np.transpose(s11)
 
 #s=1.2
 s12 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/s=1.2.dat"
-                   ,header = 0, delimiter=' ', engine='python')
-s12 = s12[['time','burn_av_Ti', 'yield_dtBHt/dt']]
+                   ,header = None, delimiter=' ', engine='python')
 s12 = s12.iloc[:,0:].values
-s12 = np.transpose(s12)
 
 #s=1.3
 s13 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/s=1.3.dat"
-                   ,header = 0, delimiter=' ', engine='python')
-s13 = s13[['time','burn_av_Ti', 'yield_dtBHt/dt']]
+                   ,header = None, delimiter=' ', engine='python')
 s13 = s13.iloc[:,0:].values
-s13 = np.transpose(s13)
 
 #s=1.4
 s14 = pd.read_csv("/Users/ewansaw/Documents/GitHub/MSci-nToF/s=1.4.dat"
-                   ,header = 0, delimiter=' ', engine='python')
-s14 = s14[['time','burn_av_Ti', 'yield_dtBHt/dt']]
+                   ,header = None, delimiter=' ', engine='python')
 s14 = s14.iloc[:,0:].values
-s14 = np.transpose(s14)
 
-#normalise sacale factor curves 
-s09[0] = (s09[0] - 8.16069345e-09)/0.9
+#normalise sacale factor curves (correcting with peak compression times)
+s09[0] = (s09[0] - 8.14003265e-09)/0.9
 s10[0] = (s10[0] - 9.10059761e-09)
 s11[0] = (s11[0] - 1.01403463e-08)/1.1
-s12[0] = (s12[0] - 1.11401e-08)/1.2
-s13[0] = (s13[0] - 1.218e-08)/1.3
-s14[0] = (s14[0] - 1.32803e-08)/1.4
+s12[0] = (s12[0] - 1.11404495e-08)/1.2
+s13[0] = (s13[0] - 1.21800054e-08)/1.3
+s14[0] = (s14[0] - 1.3220478e-08)/1.4
 
 
-#%%
-# integrate the yield against time to obtain the constants of normalisation 
-norm00 = sp.integrate.simps(xy00[2], xy00[0]) #norm = yield
-norm01 = sp.integrate.simps(xy01[2], xy01[0])
-norm03 = sp.integrate.simps(xy03[2], xy03[0])
-normign = sp.integrate.simps(no_ign[2], no_ign[0])
+datas = [xy00, xy01, xy03, no_ign, s09, s10, s11, s12, s13, s14]
+norms = np.zeros(len(datas))
 
-
-#%%
-for data in ([xy00, xy01, xy03, no_ign, s09, s10, s11, s12, s13, s14]):
+#rearranging the form of extra data
+for data in datas[4:]:
+    data[[2, 1], :] = data[[1, 2], :]
+    
+''' with this cell'''
+for data in datas:
     data[1] = 1e-3 * data[1] #converting eV to keV
     data[0] = 1e12 * data[0] #converting to picoseconds
+   
+''' need to swap this cell'''
+# integrate the yield against time to obtain the constants of normalisation 
+for i in range(len(datas)):
+    norms[i] = sp.integrate.simps(datas[i][2], datas[i][0])
+    
 
-
-
-#%%
 #normalising
-xy00[2] = xy00[2] / norm00
-xy01[2] = xy01[2] / norm01
-xy03[2] = xy03[2] / norm03
-no_ign[2] = no_ign[2] / normign
+for i in range(len(datas)):
+    datas[i][2] /= norms[i]
+
 #%%
 
 #chop out values for which neutron yield in data is greater than 1e-4 of max value
 dataset = []
-for data in ([xy00, xy01, xy03, no_ign]):
+for data in datas:
     idx = np.where(data[2] > max(data[2])/100)[0]
     data = np.transpose(data)
     dataset.append(data[idx])
-
-xy00 = np.transpose(dataset[0])
-xy01 = np.transpose(dataset[1])
-xy03 = np.transpose(dataset[2])
-no_ign = np.transpose(dataset[3])
-
+  
+for i in range(len(datas)):
+    datas[i] = np.transpose(dataset[i])
 
 # Returns the mean energy and variance based on Ballabio (Code from Aiden)
 # Tion in keV
@@ -241,8 +228,8 @@ def generate_source(regime):
     #ax.set_ylim3d(8850,9100) #for xy03
     #ax.set_zlabel('pdf')
     #ax.set_yticks(np.arange(0,0.125,0.025))
-    ax.azim = 40
-    ax.elev = 40
+    ax.azim = 0
+    ax.elev = 90
     fig.colorbar(surf, shrink=0.5, aspect=15)
     #plt.title("Linearly Increasing Temperature")
 
@@ -251,50 +238,56 @@ def generate_source(regime):
 
 #%% Plotting temp against time for different regimes
 
-#plt.plot(xy00[0], xy00[1], label='Self-heating')
-#plt.plot(xy01[0], xy01[1], label='Ignited Hotspot')
-#plt.plot(xy03[0], xy03[1], label='Propagating Burn')
-#plt.plot(no_ign[0], no_ign[1], label='Non-Igniting')
-plt.plot(s09[0], s09[1], label='s=0.9')
-plt.plot(s10[0], s10[1], label='s=1.0')
-plt.plot(s11[0], s11[1], label='s=1.1')
-plt.plot(s12[0], s12[1], label='s=1.2')
-plt.plot(s13[0], s13[1], label='s=1.3')
-plt.plot(s14[0], s14[1], label='s=1.4')
-#plt.xlabel('Time (ps)')
-plt.xlabel('Time, (t-t_o)/S (ps)')
+plt.plot(xy00[0], xy00[1], label='Self-heating')
+plt.plot(xy01[0], xy01[1], label='Ignited Hotspot')
+plt.plot(xy03[0], xy03[1], label='Propagating Burn')
+plt.plot(no_ign[0], no_ign[1], label='Non-Igniting')
+plt.axvline(x=8949.27954, linestyle='--', color = 'red', linewidth=1)
+plt.axvline(x=9012.51163, linestyle='--', color = 'green', linewidth=1)
+plt.axvline(x=8179.131149, linestyle='--', color = 'orange', linewidth=1)
+plt.axvline(x=7319.75147, linestyle='--', color = 'blue', linewidth=1)
+
+#plt.plot(datas[4][0], datas[4][1], label='s=0.9')
+#plt.plot(datas[5][0], datas[5][1], label='s=1.0')
+#plt.plot(datas[6][0], datas[6][1], label='s=1.1')
+#plt.plot(datas[7][0], datas[7][1], label='s=1.2')
+#plt.plot(datas[8][0], datas[8][1], label='s=1.3')
+#plt.plot(datas[9][0], datas[9][1], label='s=1.4')
+plt.xlabel('Time (ps)')
+#plt.xlabel('Time, (t-t_0)/S (ps)')
 plt.ylabel('Burn average Ti (keV)')
 plt.legend()
 plt.grid()
-#plt.xlim(xmin =6000 ,xmax = 10000)
-plt.xlim(xmin =-100 ,xmax =300)
-plt.savefig('temps.png')#, transparent=True)
+plt.xlim(xmin =6000 ,xmax = 10000)
+#plt.xlim(xmin =-100 ,xmax =300)
+plt.savefig('temps.png',dpi=800, transparent=True)
 
 #%% Plotting neutron yield against time for different regimes
 
-#plt.plot(xy00[0], xy00[2], label='Self-heating')
-#plt.plot(xy01[0], xy01[2], label='Ignited Hotspot')
-#plt.plot(xy03[0], xy03[2], label='Propagating Burn')
-#plt.plot(no_ign[0], no_ign[2], label='Non-Igniting')
-plt.plot(s09[0], s09[2], label='s=0.9')
-plt.plot(s10[0], s10[2], label='s=1.0')
-plt.plot(s11[0], s11[2], label='s=1.1')
-plt.plot(s12[0], s12[2], label='s=1.2')
-plt.plot(s13[0], s13[2], label='s=1.3')
-plt.plot(s14[0], s14[2],  label='s=1.4')
-#plt.xlabel('Time (ps)')
-plt.xlabel('Time, (t-t_o)/S (ps)')
+#plt.plot(datas[0][0], datas[0][2], label='Self-heating')
+#plt.plot(datas[1][0], datas[1][2], label='Ignited Hotspot')
+#plt.plot(datas[2][0], datas[2][2], label='Propagating Burn')
+#plt.plot(datas[3][0], datas[3][2], label='Non-Igniting')
+plt.plot(datas[4][0], datas[4][2], label='s=0.9')
+plt.plot(datas[5][0], datas[5][2], label='s=1.0')
+plt.plot(datas[6][0], datas[6][2], label='s=1.1')
+plt.plot(datas[7][0], datas[7][2], label='s=1.2')
+plt.plot(datas[8][0], datas[8][2], label='s=1.3')
+plt.plot(datas[9][0], datas[9][2], label='s=1.4')
+plt.xlabel('Time (ps)')
+#plt.xlabel('Time, (t-t_o)/S (ps)')
 plt.ylabel('Neutron Yield per unit time')
 plt.legend()
-plt.yscale('log')
+#plt.yscale('log')
 plt.grid()
-plt.ylim(ymin =1e20 ,ymax = 1e30)
-plt.xlim(xmin =-100 ,xmax =300)
-plt.savefig('yield.png')#, transparent=True)
+#plt.xlim(xmin =6000 ,xmax = 9500)
+#plt.ylim(ymin =1 ,ymax = 1e30)
+#plt.xlim(xmin =-100 ,xmax =300)
+plt.savefig('yield.png',dpi=800, transparent=True)
 
 
-0        #%%
-Z, E_grid, t_grid = generate_source(no_ign)
+    #%%
+Z, E_grid, t_grid = generate_source(datas[3])
 
 source_yield = 100
 Z = source_yield * Z
@@ -385,7 +378,7 @@ plt.show()
 '''
 
 #creating fig and ax
-nrows = 5
+nrows = 9
 fig, ax = plt.subplots(nrows=nrows, ncols=1)
 fig.set_size_inches(23, 70)
 #fig.suptitle('Decreasing Temperature', fontsize = 90)
@@ -493,11 +486,12 @@ plt.ylabel('Skewness')
 plt.grid()
 #plt.title('Constant Temperature (20 keV)')
 #plt.title('Linearly Decreasing (35 to 1 keV)')
-plt.xlim(xmin = 0, xmax = 2)
+plt.xlim(xmin = 0, xmax = 3)
 #plt.ylim(ymin = 0, ymax = 0.05)
-plt.savefig('dataskewness.png', transparent=True)
+plt.savefig('dataskewness.png', transparent=True, dpi = 800, bbox_inches='tight')
 
 #%%
+Z, E_grid, t_grid = generate_source(datas[0])
 
 maxindex = np.unravel_index(Z.argmax(), Z.shape)
 print(maxindex)
@@ -505,18 +499,20 @@ print(t_grid[maxindex])
 #%%
 # Plotting temp against time for different regimes
 
-#plt.plot(xy00[0], xy00[1], label='Self-heating')
+plt.plot(xy00[0], xy00[1], label='Self-heating')
 #plt.plot(xy01[0], xy01[1], label='Ignited Hotspot')
 #plt.plot(xy03[0], xy03[1], label='Propagating Burn')
-plt.plot(no_ign[0], no_ign[1], label='Non-Igniting')
+#plt.plot(no_ign[0], no_ign[1], label='Non-Igniting')
 plt.axvline(x=t_grid[maxindex],linestyle='--', label = 'Bang Time', color = 'black')
 plt.xlabel('Time (ps)')
 plt.ylabel('Burn average Ti (keV)')
 plt.legend()
 plt.grid()
-#plt.xlim(xmin =7310 ,xmax = 7325)
-#plt.xlim(xmin =8170 ,xmax = 8200)
-#plt.xlim(xmin =9000 ,xmax = 9025)
+plt.xlim(xmin =7220 ,xmax = 7420)
+#plt.xlim(xmin =8070 ,xmax = 8270)
+#plt.xlim(xmin =8900 ,xmax = 9100)
+
+plt.savefig('bangtime.png', transparent=True, dpi = 800, bbox_inches='tight')
 
 '''
 #%%
@@ -536,9 +532,9 @@ print(bang)
 #%%
 '''kurtosis analysis'''
 plt.plot(detectors,kurts, label='Self-heating')
-#plt.plot(detectors,kurts1,  label='Ignited Hotspot')
-#plt.plot(detectors,kurts3,  label='Propagating Burn')
-#plt.plot(detectors,ign_kurts, label='Non-Igniting')
+plt.plot(detectors,kurts1,  label='Ignited Hotspot')
+plt.plot(detectors,kurts3,  label='Propagating Burn')
+plt.plot(detectors,ign_kurts, label='Non-Igniting')
 plt.xlabel('detector placement (m)')
 plt.yticks(fontsize= 6.6)
 plt.ylabel('Kurtosis', fontsize = 9)
@@ -548,7 +544,7 @@ plt.legend()
 #plt.title('Linearly Decreasing (35 to 1 keV)')
 plt.xlim(xmin = 0, xmax = 3)
 #plt.ylim(ymin = 0, ymax = 0.1)
-plt.savefig('kurtosis.png', transparent=True)
+plt.savefig('kurtosis.png', transparent=True, dpi = 800)
 
 
 
