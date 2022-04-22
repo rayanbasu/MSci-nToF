@@ -12,6 +12,7 @@ from scipy.stats import skew, kurtosis
 import pandas as pd
 from matplotlib.collections import PolyCollection
 from matplotlib import colors as mcolors
+import matplotlib
 
 # Returns the mean energy and variance based on Ballabio (Code from Aiden)
 # Tion in keV
@@ -87,7 +88,7 @@ t_std = burn_time / 2.35482 #converting FWHM to sigma
 
 
 #linearly increasing temperature from 4.3keV to 15keV over burn time = 100ps
-def lininc(t, Tmin = 4.3, Tmax = 20):    
+def lininc(t, Tmin = 4.3, Tmax = 15):    
     
     #temperatures constant outside burn
     if t < (t_0 - burn_time/2):
@@ -226,7 +227,7 @@ def generate_source(T_prof):
 #%%
 '''Testing generate_source() function: 
    this should plot the source function and return the source data'''
-Z, E_grid, t_grid = generate_source(const_temp)
+Z, E_grid, t_grid = generate_source(lininc)
 
 
 
@@ -258,9 +259,6 @@ time_emitted = np.array([]) #time particle was emitted
 velocities = np.array([]) #particle velocities
 number_of_particles = np.array([]) #number of respective particles with above values
 energies = [] #turn into array!!!
-
-#Just a dataframe
-particle_df = pd.DataFrame(columns = ['time emitted', 'energy', ' number of particles'])
 
 
 #Goes thorugh the 2D arrays containing each energy and time and finds 
@@ -340,17 +338,23 @@ plt.show()
 #need to bin these results so that can show temporal spread !!! (fix)
 
 '''
+
+
+matplotlib.rc('xtick', labelsize=60) 
+matplotlib.rc('ytick', labelsize=60) 
+
+
 #creating fig and ax
-nrows = 8
+nrows = 7
 fig, ax = plt.subplots(nrows=nrows, ncols=1)
-fig.set_size_inches(23, 70)
+fig.set_size_inches(35, 95)
 #fig.suptitle('Decreasing Temperature', fontsize = 90)
-ax[nrows - 1].set_xlabel('Time of arrival (ps)', fontsize = 70)
-ax[np.int(nrows/2)].set_ylabel('Flux', fontsize = 70)
+ax[nrows - 1].set_xlabel('Time of arrival (ps)', fontsize = 75)
+ax[np.int(nrows/2)].set_ylabel('Flux', fontsize = 75)
 
 
 #Detector positions:
-detector_placements =  np.linspace(0, 1, nrows)
+detector_placements =  np.linspace(0, 2.4, nrows)
 
 #Time it arrives at the detector is recorded in this array
 for j in range(len(detector_placements)):
@@ -365,23 +369,24 @@ for j in range(len(detector_placements)):
     #Plotting the number of particles arriving at each time
     scatter = ax[j].scatter(time_arrive,number_of_particles, 
                                               c = energies, cmap = cm.plasma)
+    
 
     #fig.colorbar(scatter, shrink=1, aspect=15)
     ax[j].set_title('detector at ' + np.str(np.round(detector,2))+ 'm',
-                                      fontsize = 60)
+                                      fontsize = 70)
     print(skew(time_arrive))
-    
+
 
 fig.subplots_adjust(right=0.8)
 cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
-cbar_ax.tick_params(labelsize=30)
+cbar_ax.tick_params(labelsize=50)
 
 cbar = fig.colorbar(scatter, aspect=100, cax=cbar_ax)
-cbar.set_label('Energies (MeV)', fontsize = 70)
+cbar.set_label('Energies (MeV)', fontsize = 80)
 
 #plt.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\demo.png', dpi=100)    
-
-fig.savefig('demo1.png', transparent=False, dpi = 800)
+plt.tick_params(axis='both', which='both', labelsize=60)
+fig.savefig('demo1.png', transparent=False, dpi = 200, bbox_inches='tight')
 #%%
 detector = 0
 time_arrive = []
