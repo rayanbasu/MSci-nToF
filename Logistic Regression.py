@@ -48,6 +48,41 @@ def DTprimspecmoments(Tion):
     variance /= 1e6
     
     return mean, variance #note: this is returned in MeV!!!
+
+
+
+def DDprimspecmoments(Tion):
+# Mean calculation
+    a1 = 4.69515
+    a2 = -0.040729
+    a3 = 0.47
+    a4 = 0.81844
+
+      
+    mean_shift = a1*Tion**(0.6666666666)/(1.0+a2*Tion**a3)+a4*Tion
+    
+    # keV to MeV
+    mean_shift /= 1e3
+    
+    mean = 2.4495 + mean_shift
+    
+    # Variance calculation
+    omega0 = 82.542
+    a1 = 1.7013e-3
+    a2 = 0.16888
+    a3 = 0.49
+    a4 = 7.946e-4
+    
+    delta = a1*Tion**(0.6666666666)/(1.0+a2*Tion**a3)+a4*Tion
+    
+    C = omega0*(1+delta)
+    FWHM2 = C**2*Tion
+    variance = FWHM2/(2.35482)**2
+    # keV^2 to MeV^2
+    variance /= 1e6
+    
+    return mean, variance #note: this is returned in MeV!!!
+
 #%%
 '''
 Define the different temperature profiles centered around bang time:
@@ -67,24 +102,24 @@ tmax = 10
 
 
 
-detectors=[5,15]
+detectors=np.linspace(5,15,2)
 number_of_tests=1
 
 t_mid_list=[]
 #for i in range(number_of_tests):
-for i in [160,170,180,190,195,205,210,220,230,240]:
+for i in np.linspace(150,250,500):
     
     t_random= i
 
-    tmin_1=10
-    #tmin_1=np.random.choice(np.linspace(25,35,16))
-    tmax_1=40
-    #tmax_1 = np.random.choice(np.linspace(15,30,16))
-    #tmin_2=np.random.choice(np.linspace(25,35,16))    
-    tmin_2=10
+    #tmin_1=10
+    tmin_1=np.random.choice(np.linspace(5,15,11))
+    #tmax_1=30
+    tmax_1 = np.random.choice(np.linspace(25,35,11))
+    tmin_2=np.random.choice(np.linspace(5,15,11))    
+    #tmin_2=10
     #t_random = np.random.choice([150,160,170,180, 190, 210, 220, 230, 240, 250])
 
-    print(t_random)
+    print(t_random, tmin_1, tmax_1, tmin_2)
     
     
     t_mid_list.append(t_random)
@@ -186,7 +221,7 @@ for i in [160,170,180,190,195,205,210,220,230,240]:
         
         norm = 1 / (2 * np.pi * t_std * E_std)
         
-        return  energy_gauss*time_gauss
+        return  norm* energy_gauss*time_gauss
 
 
     def generate_source(T_prof):
@@ -238,7 +273,7 @@ for i in [160,170,180,190,195,205,210,220,230,240]:
     '''Testing generate source: should plot source function and return the source data'''
     Z, E_grid, t_grid = generate_source(incdec)
 
-    particles_num = 20
+    particles_num = 500
     
     
     #Empty arrays to record data:
@@ -311,8 +346,7 @@ for i in [160,170,180,190,195,205,210,220,230,240]:
     
     
    
-
-r'''
+    r'''
     plt.figure()
     plt.plot(detectors,skews, 'x')
     plt.plot(detectors, kurts, 'x')
@@ -323,18 +357,18 @@ r'''
     plt.title(f'Constant Temperature ({temp} keV)')
     #plt.ylim(ymax = 0.5, ymin = 0)
     plt.savefig(r'C:\Users\rayan\OneDrive\Documents\Y4\MSci Project\lininc_{}_{}.png'.format(tmax, tmin), dpi=100)
-''' 
+    '''
 #%%
 t = np.linspace(0,1000,1000)
 T = np.zeros(len(t))
 for i in range(len(t)):
-    T[i] = incdec(t[i], 10, 20, 30, 200)
+    T[i] = incdec(t[i], 10, 30, 10, 230)
 
 sigma = np.sqrt(DTprimspecmoments(T)[1])
- 
+plt.grid() 
 plt.plot(t, T)    
 #plt.plot(t, sigma)
-plt.title('Temperature against Time')
+#plt.title('Temperature against Time')
 plt.xlabel('Time (ps)')
 plt.ylabel('Temperature (keV)')#%%
 #%%
@@ -362,9 +396,9 @@ for i in range(len(t_mid_list)):
         labels.append('Inc')
 
 df_2['label']=labels
-'''
-X_train, X_test, y_train, y_test = train_test_split(diff, df_2['label'], test_size=1)
 
+X_train, X_test, y_train, y_test = train_test_split(diff, df_2['label'], test_size=0.4)
+#%%
 
 
 # instantiate the model (using the default parameters)
@@ -375,7 +409,7 @@ logreg.fit(X_train,y_train)
 
 #
 y_pred=logreg.predict(X_test)
-'''
+r'''
 my_preds=[]
 for i in X_test:
     print(i[0])
@@ -383,10 +417,13 @@ for i in X_test:
         my_preds.append('Inc')
     else:
         my_preds.append('Dec')
+'''
 
-
-print("Accuracy:",metrics.accuracy_score(y_test, my_preds))
+print("Accuracy:",metrics.accuracy_score(y_test, y_pred))
 #%%
 
-df_1 = pd.DataFrame(global_list,columns= column_string)
-
+from sklearn.naive_bayes import GaussianNB
+classifier = GaussianNB()
+classifier.fit(X_train, y_train)
+y_pred  =  classifier.predict(X_test)   
+print("Accuracy:",metrics.accuracy_score(y_test, y_pred))
